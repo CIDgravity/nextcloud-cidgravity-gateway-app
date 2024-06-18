@@ -1,4 +1,6 @@
 { "translations": {
-    "IPFS" : "IPFS"
+    "CIDgravity" : "CIDgravity",
+    "File status on IPFS" : "File status on IPFS",
+    "Display here the CID and the file status using CIDgravity gateway" : "Display here the CID and the file status using CIDgravity gateway"
 },"pluralForm" :"nplurals=2; plural=(n != 1);"
 }

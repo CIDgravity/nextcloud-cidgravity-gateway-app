@@ -1,11 +1,12 @@
 <template>
 	<div>
-		IPFS Link and file status here
+		FileInfo: {{ fileInfo }}
+		<br><br>
+		External storage config: {{ externalStorageConfiguration }}
 	</div>
 </template>
 
 <script>
-
 export default {
 	name: 'GatewayTab',
 
@@ -14,6 +15,8 @@ export default {
 
 	data() {
 		return {
+			fileInfo: {},
+			externalStorageConfiguration: {},
 		}
 	},
 
@@ -36,8 +39,14 @@ export default {
 			console.error('Unable to unmount CidgravityGatewayTab', error)
 		}
 	},
-	
+
 	methods: {
+		setFileInfo(fileInfo) {
+			this.fileInfo = fileInfo
+		},
+		setExternalStorageConfiguration(config) {
+			this.externalStorageConfiguration = config
+		}
 	},
 }
 </script>

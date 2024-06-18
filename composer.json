@@ -9,16 +9,36 @@
             "email": "support@cidgravity.com"
         }
     ],
-    "require": {},
+    "autoload": {
+		"psr-4": {
+			"OCA\\CidgravityGateway\\": "lib/"
+		}
+	},
+    "require": {
+        "php": "^8.1",
+		"bamarni/composer-bin-plugin": "^1.8"
+    },
     "require-dev": {
+        "nextcloud/ocp": "dev-stable29",
+		"roave/security-advisories": "dev-latest",
+        "bamarni/composer-bin-plugin": "^1.4",
         "phpunit/phpunit": "^8.5",
         "nextcloud/coding-standard": "^0.5.0"
     },
+    "extra": {
+		"bamarni-bin": {
+			"bin-links": true,
+			"forward-command": false
+		}
+	},
     "config": {
         "optimize-autoloader": true,
-        "classmap-authoritative": true,
+        "sort-packages": true,
         "platform": {
-            "php": "7.2"
+            "php": "8.1"
+        },
+        "allow-plugins": {
+            "bamarni/composer-bin-plugin": true
         }
     },
     "scripts": {

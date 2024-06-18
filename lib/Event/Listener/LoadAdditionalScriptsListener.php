@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\CidgravityGateway\Listener;
+namespace OCA\CidgravityGateway\Event\Listener;
 
 use OCA\Files\Event\LoadAdditionalScriptsEvent;
 use OCP\EventDispatcher\Event;

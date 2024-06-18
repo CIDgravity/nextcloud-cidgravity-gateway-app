@@ -1,4 +1,7 @@
 import Vue from 'vue'
+import axios from '@nextcloud/axios'
+
+import { generateOcsUrl } from '@nextcloud/router'
 import { translate, translatePlural } from 'nextcloud-l10n'
 
 import GatewayTab from './views/GatewayTab.vue'
@@ -13,31 +16,48 @@ window.addEventListener('DOMContentLoaded', function() {
 	if (OCA.Files && OCA.Files.Sidebar) {
 		const gatewayTab = new OCA.Files.Sidebar.Tab({
 			id: 'cidgravitygateway',
-			name: t('cidgravitygateway', 'IPFS'),
+			name: t('cidgravitygateway', 'CIDgravity'),
 			icon: 'icon-rename',
 
 			mount(el, fileInfo, context) {
 				if (tabInstance) {
 					tabInstance.$destroy()
 				}
-				tabInstance = new View({
-					// Better integration with vue parent component
-					parent: context,
-				})
-				// Only mount after we have all the info we need
-				tabInstance.update(fileInfo)
-				tabInstance.$mount(el)
+
+				if (fileInfo && fileInfo.mountType === "external") {
+					const url = generateOcsUrl('apps/cidgravitygateway/get-external-storage-config?fileId=' + fileInfo.id, 2)
+
+					axios.get(url).then((response) => {
+						if (response.data.success) {
+							if (response.data.configuration.is_cidgravity) {
+								tabInstance = new View({
+									parent: context,
+								})
+								
+								tabInstance.setExternalStorageConfiguration(response.data.configuration)
+								tabInstance.setFileInfo(fileInfo)			
+								tabInstance.$mount(el)
+							} else {
+								console.log('destroy because not an cidgravity storage')
+							}
+						}
+
+					}).catch((error) => {
+						console.error(error)
+					})
+				} else {
+					console.log('destroy because not an external storage')
+					tabInstance.$destroy()
+				}
 			},
+
 			update(fileInfo) {
-				tabInstance.update(fileInfo)
+				tabInstance.setFileInfo(fileInfo)
 			},
+
 			destroy() {
 				tabInstance.$destroy()
 				tabInstance = null
-			},
-			enabled(fileInfo) {
-				// return (fileInfo && !fileInfo.isDirectory());
-				return true
 			},
 		})
 
