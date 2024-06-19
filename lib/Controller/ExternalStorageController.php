@@ -39,13 +39,44 @@ class ExternalStorageController extends Controller {
                 return new DataResponse(['error' => 'user not logged in'], Http::STATUS_INTERNAL_SERVER_ERROR);
             }
 
-            $externalStorageConfiguration = $this->externalStorageService->getExternalStorageConfigurationForSpecificFile($user, $fileId);
+            $externalStorageConfiguration = $this->externalStorageService->getExternalStorageConfigurationForSpecificFile($user, $fileId, false);
 
             if (!isset($externalStorageConfiguration['error'])) {
                 return new DataResponse(['success' => true, 'configuration' => $externalStorageConfiguration], Http::STATUS_OK); 
             }
 
             return new DataResponse(['success' => false, 'error' => $externalStorageConfiguration['message']], Http::STATUS_INTERNAL_SERVER_ERROR);
+
+        } catch (Exception $e) {
+            return new DataResponse(['success' => false, 'error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
+        }
+	}
+
+    /**
+	 * @NoAdminRequired
+	 * @NoCSRFRequired
+	 * Return the metadata for specific file from metadata endpoint from external storage configuration
+	 * @return DataResponse
+	 */
+	public function getMetadataForSpecificFile(int $fileId): DataResponse {
+        try {
+
+            if (!is_int($fileId)) {
+                return new DataResponse(['error' => 'invalid param fileId provided'], Http::STATUS_BAD_REQUEST);
+            }
+
+            $user = $this->userSession->getUser();
+            if (!$user) {
+                return new DataResponse(['error' => 'user not logged in'], Http::STATUS_INTERNAL_SERVER_ERROR);
+            }
+
+            $fileMetadata = $this->externalStorageService->getMetadataForSpecificFile($user, $fileId);
+
+            if (!isset($fileMetadata['error'])) {
+                return new DataResponse(['success' => true, 'metadata' => $fileMetadata], Http::STATUS_OK); 
+            }
+
+            return new DataResponse(['success' => false, 'error' => $fileMetadata['message']], Http::STATUS_INTERNAL_SERVER_ERROR);
 
         } catch (Exception $e) {
             return new DataResponse(['success' => false, 'error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);

@@ -38,7 +38,7 @@ class BackendService extends Backend {
 			->setText($l->t('CIDgravity'))
 			->addParameters([
 				new DefinitionParameter('host', $l->t('URL')),
-				new DefinitionParameter('metadata_url', $l->t('METADATA_URL')),
+				new DefinitionParameter('metadata_endpoint', $l->t('Metadata endpoint')),
 				(new DefinitionParameter('root', $l->t('Remote subfolder')))
 					->setFlag(DefinitionParameter::FLAG_OPTIONAL),
 				(new DefinitionParameter('secure', $l->t('Secure https://')))

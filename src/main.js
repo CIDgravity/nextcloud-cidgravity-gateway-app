@@ -20,6 +20,7 @@ window.addEventListener('DOMContentLoaded', function() {
 			icon: 'icon-rename',
 
 			mount(el, fileInfo, context) {
+				console.log('mount')
 				if (tabInstance) {
 					tabInstance.$destroy()
 				}
@@ -35,7 +36,8 @@ window.addEventListener('DOMContentLoaded', function() {
 								})
 								
 								tabInstance.setExternalStorageConfiguration(response.data.configuration)
-								tabInstance.setFileInfo(fileInfo)			
+								tabInstance.setFileInfo(fileInfo)	
+								tabInstance.loadFileMetadata()		
 								tabInstance.$mount(el)
 							} else {
 								console.log('destroy because not an cidgravity storage')
@@ -61,6 +63,7 @@ window.addEventListener('DOMContentLoaded', function() {
 			},
 		})
 
+		console.log('registerTab')
 		OCA.Files.Sidebar.registerTab(gatewayTab)
 	}
 })

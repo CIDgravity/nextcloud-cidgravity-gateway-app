@@ -33,7 +33,36 @@ use OCA\Files_External\Lib\StorageConfig;
 
 class ExternalStorageService {
 
-	public function __construct(private LoggerInterface $logger, private IRootFolder $rootFolder, private GlobalStoragesService $globalStoragesService) {}
+	public function __construct(private LoggerInterface $logger, private IRootFolder $rootFolder, private GlobalStoragesService $globalStoragesService, private HttpRequestService $httpClient) {}
+
+    /**
+	 * Get the metadata from the external storage metadata endpoint for specific file
+	 * @param IUser $nextcloudUser Nextcloud user associated with the session
+	 * @param int $fileId File ID to search for
+	 * @return array
+	 * @throws Exception
+	 */
+    public function getMetadataForSpecificFile(IUser $nextcloudUser, int $fileId): array {
+        try {
+            $externalStorageConfiguration = $this->getExternalStorageConfigurationForSpecificFile($nextcloudUser, $fileId, true);
+
+            if (!isset($externalStorageConfiguration['error'])) {
+                $requestBody = [
+                    "param1" => "florian.ruen@gmail.com",
+                    "param2" => "/CIDgravity/next.pdf"
+                ];
+
+                $response = $this->httpClient->post($externalStorageConfiguration['metadata_endpoint'], $requestBody);
+                return ['metadata' => $response];
+
+            } else {
+                return $externalStorageConfiguration;
+            }
+
+        } catch (Exception $e) {
+            return ['message' => 'error getting external storage config', 'error' => $e->getMessage()];
+        }
+	}
 
     /**
 	 * Get the external storage configuration to which a specific fileId belongs to
@@ -42,7 +71,7 @@ class ExternalStorageService {
 	 * @return array
 	 * @throws Exception
 	 */
-    public function getExternalStorageConfigurationForSpecificFile(IUser $nextcloudUser, int $fileId): array {
+    public function getExternalStorageConfigurationForSpecificFile(IUser $nextcloudUser, int $fileId, bool $includeAuthSettings): array {
         try {
             $userFolder = $this->rootFolder->getUserFolder($nextcloudUser->getUID());
             $files = $userFolder->getById($fileId);
@@ -59,7 +88,7 @@ class ExternalStorageService {
             // loop through each external storage to find the one related to your file
             foreach ($externalStorages as $externalStorage) {
                 if ($this->isFileInExternalStorage($file, $externalStorage)) {
-                    return $this->buildExternalStorageConfiguration($externalStorage);
+                    return $this->buildExternalStorageConfiguration($externalStorage, $includeAuthSettings);
                 }
             }
 
@@ -75,12 +104,24 @@ class ExternalStorageService {
 	 * @param StorageConfig $externalStorage External storage to build configuration for
 	 * @return array
 	*/
-    private function buildExternalStorageConfiguration(StorageConfig $externalStorage): array {
+    private function buildExternalStorageConfiguration(StorageConfig $externalStorage, bool $includeAuthSettings): array {
+
+        $this->logger->error("buildExternalStorageConfiguration", [
+            'externalStorage' => json_encode($externalStorage),
+        ]);
+
         $configuration = [];
         $configuration['is_cidgravity'] = $externalStorage->getBackend()->getIdentifier() == "cidgravity";
         $configuration['id'] = $externalStorage->getId();
         $configuration['host'] = $externalStorage->getBackendOption('host');
         $configuration['mountpoint'] = $externalStorage->getMountPoint();
+        $configuration['metadata_endpoint'] = $externalStorage->getBackendOption('metadata_endpoint');
+
+        // check if we need to include auth settings (for metadata call only, not exposed to frontend)
+        if ($includeAuthSettings) {
+            $configuration['user'] = $externalStorage->getBackendOption('user');
+            $configuration['password'] = $externalStorage->getBackendOption('password');
+        }
 
         return $configuration;
     }

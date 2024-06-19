@@ -3,10 +3,16 @@
 		FileInfo: {{ fileInfo }}
 		<br><br>
 		External storage config: {{ externalStorageConfiguration }}
+		<br><br>
+		File metadata: {{ fileMetadata }}
 	</div>
 </template>
 
 <script>
+import axios from 'axios'
+
+import { generateOcsUrl } from '@nextcloud/router'
+
 export default {
 	name: 'GatewayTab',
 
@@ -16,6 +22,7 @@ export default {
 	data() {
 		return {
 			fileInfo: {},
+			fileMetadata: {},
 			externalStorageConfiguration: {},
 		}
 	},
@@ -46,6 +53,22 @@ export default {
 		},
 		setExternalStorageConfiguration(config) {
 			this.externalStorageConfiguration = config
+		},
+		loadFileMetadata() {
+			console.log(this.externalStorageConfiguration.metadata_endpoint)
+
+			if (this.externalStorageConfiguration.metadata_endpoint) {
+				axios.get(generateOcsUrl('apps/cidgravitygateway/get-file-metadata?fileId=' + this.fileInfo.id, 2)).then(res => {
+					console.log(res.data)
+					if (res.data.success) {
+						this.fileMetadata = res.data.metadata
+					}
+				}).catch((error) => {
+					console.error(error)
+				})
+			} else {
+				console.error("unable to find metadata endpoint to call")
+			}
 		}
 	},
 }
