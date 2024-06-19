@@ -25,15 +25,18 @@ namespace OCA\CidgravityGateway\Service;
 
 use Exception;
 use OCP\IUser;
+use OCP\Files\Config\IUserMountCache;
 use OCP\Files\IRootFolder;
 use OCA\Files_External\Service\GlobalStoragesService;
 use Psr\Log\LoggerInterface;
-use OCP\Files\File;
 use OCA\Files_External\Lib\StorageConfig;
+
+use OCA\Files_External\NotFoundException;
+use OCP\Files\StorageNotAvailableException;
 
 class ExternalStorageService {
 
-	public function __construct(private LoggerInterface $logger, private IRootFolder $rootFolder, private GlobalStoragesService $globalStoragesService, private HttpRequestService $httpClient) {}
+	public function __construct(private LoggerInterface $logger, private IUserMountCache $test, private IRootFolder $rootFolder, private GlobalStoragesService $globalStoragesService, private HttpRequestService $httpClient) {}
 
     /**
 	 * Get the metadata from the external storage metadata endpoint for specific file
@@ -73,30 +76,31 @@ class ExternalStorageService {
 	 */
     public function getExternalStorageConfigurationForSpecificFile(IUser $nextcloudUser, int $fileId, bool $includeAuthSettings): array {
         try {
-            $userFolder = $this->rootFolder->getUserFolder($nextcloudUser->getUID());
-            $files = $userFolder->getById($fileId);
-            if (count($files) <= 0 || !$files[0] instanceof File) {
-                return ['message' => 'file ' . $fileId . ' not found', 'error' => 'file_not_found'];
+            $mountsForFile = $this->test->getMountsForFileId($fileId, $nextcloudUser->getUID());
+            $this->logger->error("test mounts from fileId", ["getMountsForFileId" => $mountsForFile]);
+            
+            if (empty($mountsForFile)) {
+                return ['message' => 'no external storage found for file ' . $fileId, 'error' => 'external_storage_not_found'];
             }
 
-            // get the file according to the provided $fileId
-            $file = $files[0];
+            // get configuration for external storage from ID
+            $externalStorage = $this->globalStoragesService->getStorage($mountsForFile[0]->getMountId());
 
-            // fetch all configured external storages
-            $externalStorages = $this->globalStoragesService->getStorages();
-
-            // loop through each external storage to find the one related to your file
-            foreach ($externalStorages as $externalStorage) {
-                if ($this->isFileInExternalStorage($file, $externalStorage)) {
-                    return $this->buildExternalStorageConfiguration($externalStorage, $includeAuthSettings);
-                }
+            // check external storage type is a CIDgravity storage
+            // if not, it means storage not found (for our use case)
+            if ($externalStorage->getBackend()->getIdentifier() != "cidgravity") {
+                return ['message' => 'external storage type for file ' . $fileId . ' is not a cidgravity storage', 'error' => 'external_storage_invalid_type'];
             }
+
+            return $this->buildExternalStorageConfiguration($externalStorage, false);
 
         } catch (Exception $e) {
             return ['message' => 'error getting external storage config', 'error' => $e->getMessage()];
+        } catch (NotFoundException $e) {
+            return ['message' => 'external storage not found for file ' . $fileId, 'error' => $e->getMessage()];
+        } catch (StorageNotAvailableException $e) {
+            return ['message' => 'external storage not available for file ' . $fileId, 'error' => $e->getMessage()];
         }
-
-        return ['message' => 'external storage for file ' . $fileId . ' not found', 'error' => 'external_storage_not_found'];
 	}
 
     /**
@@ -105,11 +109,6 @@ class ExternalStorageService {
 	 * @return array
 	*/
     private function buildExternalStorageConfiguration(StorageConfig $externalStorage, bool $includeAuthSettings): array {
-
-        $this->logger->error("buildExternalStorageConfiguration", [
-            'externalStorage' => json_encode($externalStorage),
-        ]);
-
         $configuration = [];
         $configuration['is_cidgravity'] = $externalStorage->getBackend()->getIdentifier() == "cidgravity";
         $configuration['id'] = $externalStorage->getId();
@@ -124,40 +123,5 @@ class ExternalStorageService {
         }
 
         return $configuration;
-    }
-
-    /**
-	 * Check if specific file belongs to a specific external storage configuration
-	 * @param File $file File to search for
-	 * @param StorageConfig $externalStorage External storage configuration
-	 * @return bool
-	*/
-    private function isFileInExternalStorage(File $file, StorageConfig $externalStorage): bool {
-        $fileStorage = $file->getStorage();
-
-        if ($fileStorage->instanceOfStorage('\OC\Files\Storage\DAV')) {
-            if ($externalStorage->getBackend()->getIdentifier() == "cidgravity") {
-                // according to the code, this ID format will be webdav::[EXTERNAL_STORAGE_USER]@[EXTERNAL_STORAGE_HOST]/[EXTERNAL_STORAGE_ROOT]/
-                $fileStorageID = $fileStorage->getId();
-
-                // to check if this file belongs to this external storage
-                // create same ID format using external storage configuration
-                $protocol = 'http://';
-
-                if ($externalStorage->getBackendOption('secure')) {
-                    $protocol = 'https://';
-                }
-
-                $externalStorageHost = str_replace($protocol, "", $externalStorage->getBackendOption('host'));
-                $externalStorageID = 'webdav::' . $externalStorage->getBackendOption('user') . '@' . $externalStorageHost . '/' . $externalStorage->getBackendOption('root');
-                
-                // check if the fileStorageID falls under externalStorageID
-                if (strpos($fileStorageID, $externalStorageID) === 0) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 }

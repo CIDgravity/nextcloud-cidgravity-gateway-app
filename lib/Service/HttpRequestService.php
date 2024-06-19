@@ -34,7 +34,7 @@ class HttpRequestService {
         $this->ch = curl_init();
     }
 
-    public function post($url, $data, $headers = ['Content-Type: application/json']) {
+    public function post($url, $data, $headers = ['Content-Type: application/json'], $username = null, $password = null) {
         $jsonData = json_encode($data);
 
         // set CURL configuration
@@ -43,6 +43,12 @@ class HttpRequestService {
         curl_setopt($this->ch, CURLOPT_POSTFIELDS, $jsonData);
         curl_setopt($this->ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
+
+        // if username and password provided, setup basic authentication
+        if ($username !== null && $password !== null) {
+            curl_setopt($this->ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+            curl_setopt($this->ch, CURLOPT_USERPWD, "$username:$password");
+        }
 
         // execute the request
         $response = curl_exec($this->ch);
@@ -53,7 +59,7 @@ class HttpRequestService {
             throw new Exception("cURL Error: $errorMessage");
         }
 
-        return $response;
+        return json_decode($response, true);
     }
 
     public function __destruct() {
