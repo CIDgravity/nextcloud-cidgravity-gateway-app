@@ -20,7 +20,6 @@ window.addEventListener('DOMContentLoaded', function() {
 			icon: 'icon-rename',
 
 			mount(el, fileInfo, context) {
-				console.log('mount')
 				if (tabInstance) {
 					tabInstance.$destroy()
 				}
@@ -39,16 +38,14 @@ window.addEventListener('DOMContentLoaded', function() {
 								tabInstance.setFileInfo(fileInfo)	
 								tabInstance.loadFileMetadata()		
 								tabInstance.$mount(el)
-							} else {
-								console.log('destroy because not an cidgravity storage')
 							}
 						}
 
 					}).catch((error) => {
 						console.error(error)
 					})
+
 				} else {
-					console.log('destroy because not an external storage')
 					tabInstance.$destroy()
 				}
 			},
@@ -63,7 +60,6 @@ window.addEventListener('DOMContentLoaded', function() {
 			},
 		})
 
-		console.log('registerTab')
 		OCA.Files.Sidebar.registerTab(gatewayTab)
 	}
 })

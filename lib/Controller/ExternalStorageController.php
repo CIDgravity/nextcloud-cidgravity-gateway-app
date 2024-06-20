@@ -39,7 +39,7 @@ class ExternalStorageController extends Controller {
                 return new DataResponse(['error' => 'user not logged in'], Http::STATUS_INTERNAL_SERVER_ERROR);
             }
 
-            $externalStorageConfiguration = $this->externalStorageService->test($user, $fileId, false);
+            $externalStorageConfiguration = $this->externalStorageService->getExternalStorageConfigurationForSpecificFile($user, $fileId, false);
 
             if (!isset($externalStorageConfiguration['error'])) {
                 return new DataResponse(['success' => true, 'configuration' => $externalStorageConfiguration], Http::STATUS_OK); 
@@ -73,7 +73,7 @@ class ExternalStorageController extends Controller {
             $fileMetadata = $this->externalStorageService->getMetadataForSpecificFile($user, $fileId);
 
             if (!isset($fileMetadata['error'])) {
-                return new DataResponse(['success' => true, 'metadata' => $fileMetadata], Http::STATUS_OK); 
+                return new DataResponse(['success' => true, 'metadata' => $fileMetadata['metadata']], Http::STATUS_OK); 
             }
 
             return new DataResponse(['success' => false, 'error' => $fileMetadata['message']], Http::STATUS_INTERNAL_SERVER_ERROR);

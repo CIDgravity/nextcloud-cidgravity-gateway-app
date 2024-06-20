@@ -24,6 +24,7 @@
 namespace OCA\CidgravityGateway\Service;
 
 use Exception;
+use OCP\Files\Config\ICachedMountFileInfo;
 use OCP\IUser;
 use OCP\Files\Config\IUserMountCache;
 use OCP\Files\IRootFolder;
@@ -51,11 +52,17 @@ class ExternalStorageService {
 
             if (!isset($externalStorageConfiguration['error'])) {
                 $requestBody = [
-                    "param1" => "florian.ruen@gmail.com",
-                    "param2" => "/CIDgravity/next.pdf"
+                    "fileOwner" => $nextcloudUser->getUID(),
+                    "filePath" => $externalStorageConfiguration['filepath'],
                 ];
 
-                $response = $this->httpClient->post($externalStorageConfiguration['metadata_endpoint'], $requestBody);
+                $response = $this->httpClient->post(
+                    $externalStorageConfiguration['metadata_endpoint'], 
+                    $requestBody,
+                    $externalStorageConfiguration['user'],
+                    $externalStorageConfiguration['password'],
+                );
+
                 return ['metadata' => $response];
 
             } else {
@@ -77,8 +84,7 @@ class ExternalStorageService {
     public function getExternalStorageConfigurationForSpecificFile(IUser $nextcloudUser, int $fileId, bool $includeAuthSettings): array {
         try {
             $mountsForFile = $this->test->getMountsForFileId($fileId, $nextcloudUser->getUID());
-            $this->logger->error("test mounts from fileId", ["getMountsForFileId" => $mountsForFile]);
-            
+
             if (empty($mountsForFile)) {
                 return ['message' => 'no external storage found for file ' . $fileId, 'error' => 'external_storage_not_found'];
             }
@@ -92,7 +98,7 @@ class ExternalStorageService {
                 return ['message' => 'external storage type for file ' . $fileId . ' is not a cidgravity storage', 'error' => 'external_storage_invalid_type'];
             }
 
-            return $this->buildExternalStorageConfiguration($externalStorage, false);
+            return $this->buildExternalStorageConfiguration($mountsForFile[0]->getInternalPath(), $externalStorage, $includeAuthSettings);
 
         } catch (Exception $e) {
             return ['message' => 'error getting external storage config', 'error' => $e->getMessage()];
@@ -104,17 +110,23 @@ class ExternalStorageService {
 	}
 
     /**
-	 * Construct specific configuration object from external storage configuration, to avoid expose sensitive data (such as password ...)
+	 * Construct specific configuration object from external storage configuration to avoid expose sensitive data (such as password ...)
+     * @param string $fileInternalPath File internal path (without the external storage mount point, only path after)
+     * @param bool $includeAuthSettings should include username and password in the returned configuration or not
 	 * @param StorageConfig $externalStorage External storage to build configuration for
 	 * @return array
 	*/
-    private function buildExternalStorageConfiguration(StorageConfig $externalStorage, bool $includeAuthSettings): array {
+    private function buildExternalStorageConfiguration(string $fileInternalPath, StorageConfig $externalStorage, bool $includeAuthSettings): array {
         $configuration = [];
         $configuration['is_cidgravity'] = $externalStorage->getBackend()->getIdentifier() == "cidgravity";
         $configuration['id'] = $externalStorage->getId();
         $configuration['host'] = $externalStorage->getBackendOption('host');
         $configuration['mountpoint'] = $externalStorage->getMountPoint();
         $configuration['metadata_endpoint'] = $externalStorage->getBackendOption('metadata_endpoint');
+        $configuration['default_ipfs_gateway'] = $externalStorage->getBackendOption('default_ipfs_gateway');
+        
+        // add file internal path (without the mount point folder, only the path after)
+        $configuration['filepath'] = $fileInternalPath;
 
         // check if we need to include auth settings (for metadata call only, not exposed to frontend)
         if ($includeAuthSettings) {

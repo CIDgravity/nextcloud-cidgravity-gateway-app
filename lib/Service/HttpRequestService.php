@@ -34,21 +34,26 @@ class HttpRequestService {
         $this->ch = curl_init();
     }
 
-    public function post($url, $data, $headers = ['Content-Type: application/json'], $username = null, $password = null) {
+    public function post($url, $data, $username = null, $password = null) {
         $jsonData = json_encode($data);
 
         // set CURL configuration
         curl_setopt($this->ch, CURLOPT_URL, $url);
         curl_setopt($this->ch, CURLOPT_POST, true);
         curl_setopt($this->ch, CURLOPT_POSTFIELDS, $jsonData);
-        curl_setopt($this->ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
 
-        // if username and password provided, setup basic authentication
+        // build headers
+        $headers = ['Content-Type: application/json'];
+
+        // if username and password provided, add headers for basic authentication
         if ($username !== null && $password !== null) {
-            curl_setopt($this->ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-            curl_setopt($this->ch, CURLOPT_USERPWD, "$username:$password");
+            array_push($headers, "X-Username: $username");
+            array_push($headers, "X-Password: $password");
         }
+
+        // set header in curl configuration
+        curl_setopt($this->ch, CURLOPT_HTTPHEADER, $headers);
 
         // execute the request
         $response = curl_exec($this->ch);

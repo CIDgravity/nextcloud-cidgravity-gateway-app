@@ -33,7 +33,7 @@ class BackendService extends Backend {
 	public function __construct(IL10N $l, Password $legacyAuth) {
 		$this
 			->setIdentifier('cidgravity')
-			->addIdentifierAlias('\OC\Files\Storage\DAV') // legacy compat
+			->addIdentifierAlias('\OC\Files\Storage\DAV')
 			->setStorageClass('\OC\Files\Storage\DAV')
 			->setText($l->t('CIDgravity'))
 			->addParameters([
@@ -44,9 +44,12 @@ class BackendService extends Backend {
 				(new DefinitionParameter('secure', $l->t('Secure https://')))
 					->setType(DefinitionParameter::VALUE_BOOLEAN)
 					->setDefaultValue(true),
+				(new DefinitionParameter('default_ipfs_gateway', $l->t('Default IPFS gateway')))
+					->setType(DefinitionParameter::VALUE_TEXT)
+					->setDefaultValue('https://ipfs.io/ipfs')
+					->setTooltip('You can also use your custom gateway or public gateway such as https://dweb.link'),
 			])
 			->addAuthScheme(AuthMechanism::SCHEME_PASSWORD)
-			->setLegacyAuthMechanism($legacyAuth)
-		;
+			->setLegacyAuthMechanism($legacyAuth);
 	}
 }
