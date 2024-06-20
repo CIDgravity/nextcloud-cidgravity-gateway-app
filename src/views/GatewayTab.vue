@@ -1,54 +1,97 @@
 <template>
-	<div class="tabContent" :class="{ 'icon-loading': loading }">
-		<ul v-if="!loading">
-			<TabLinkEntrySimple 
-				ref="cidEntry" 
-				class="menu-entry__internal" 
-				:title="t('cidgravitygateway', 'File CID')"
-				:subtitle="shortenedFileCid"
+	<div>	
+
+		<!-- Not a CIDgravity storage, nothing to display -->
+		<NcEmptyContent v-if="!isCidgravityStorage && !isError"
+			class="gateway__empty"
+			:name="t('cidgravitygateway', 'This file is not on an CIDgravity storage')">
+			<template #icon>
+				<AlertCircleOutlineIcon />
+			</template>
+		</NcEmptyContent>
+
+		<!-- Error loading storage type -->
+		<NcEmptyContent v-if="isError"
+			class="gateway__empty"
+			:name="t('cidgravitygateway', 'Something wrong while loading the file metadata')">
+			<template #icon>
+				<AlertCircleOutlineIcon />
+			</template>
+		</NcEmptyContent>
+
+		<!-- CIDgravity storage: display all metadata -->
+		<div v-if="isCidgravityStorage && !isError" class="tabContent" :class="{ 'icon-loading': loading }">
+			<div class="ipfs-gateway-select">
+				<NcSelect ref="select"
+					v-model="ipfsGateway"
+					input-id="ipfs-gateway-input"
+					class="ipfs-gateway__input"
+					:loading="loading"
+					:placeholder="t('cidgravitygateway', 'Choose an IPFS gateway to use')"
+					:options="ipfsGatewayOptions"
+					@option:selected="onIpfsGatewaySelected" />
+			</div>
+
+			<div v-if="isCustomIpfsGateway" class="ipfs-custom-gateway-input">
+				<input 
+					v-model="ipfsGateway.link" 
+					input-id="ipfs-custom-gateway-input" 
+					:placeholder="t('cidgravitygateway', 'Type your IPFS gateway link, ending with /ipfs')"
+					type="text"
+					style="width: 100%; margin-top: 10px; margin-bottom: 10px;"
 				>
-				<template #avatar>
-					<div class="entry-icon icon-external-white"></div>
-				</template>
+			</div>
 
-				<NcActionButton :title="t('cidgravitygateway', 'Copy file CID')" 
-				:aria-label="t('cidgravitygateway', 'Copy file CID')" 
-				@click="copyFileCid">
-					<template #icon>
-						<CheckIcon v-if="copied && copySuccess" :size="20" class="icon-checkmark-color" />
-						<ClipboardIcon v-else :size="20" />
+			<ul v-if="!loading">
+				<TabLinkEntrySimple 
+					ref="ipfsPublicLinkEntry" 
+					class="menu-entry__internal" 
+					:title="t('cidgravitygateway', 'IPFS public link')"
+					:subtitle="t('cidgravitygateway', 'Click to open the IPFS link')"
+					>
+					<template #avatar>
+						<div class="entry-icon-primary icon-public-white"></div>
 					</template>
-				</NcActionButton>
-			</TabLinkEntrySimple>
 
-			<TabLinkEntrySimple 
-				ref="ipfsPublicLinkEntry" 
-				class="menu-entry__internal" 
-				:title="t('cidgravitygateway', 'IPFS public link')"
-				:subtitle="t('cidgravitygateway', 'Click to open the IPFS link')"
-				>
-				<template #avatar>
-					<div class="entry-icon icon-external-white"></div>
-				</template>
+					<NcActionButton :title="t('cidgravitygateway', 'Copy public link')" 
+					:aria-label="t('cidgravitygateway', 'Copy public link')" 
+					@click="copyIpfsPublicLink">
+						<template #icon>
+							<ClipboardIcon :size="20" />
+						</template>
+					</NcActionButton>
+				</TabLinkEntrySimple>
 
-				<NcActionButton :title="t('cidgravitygateway', 'Copy public link')" 
-				:aria-label="t('cidgravitygateway', 'Copy public link')" 
-				@click="copyIpfsPublicLink">
-					<template #icon>
-						<CheckIcon v-if="copied && copySuccess" :size="20" class="icon-checkmark-color" />
-						<ClipboardIcon v-else :size="20" />
+				<TabLinkEntrySimple 
+					ref="cidEntry" 
+					class="menu-entry__internal" 
+					:title="t('cidgravitygateway', 'File CID')"
+					:subtitle="shortenedFileCid"
+					>
+					<template #avatar>
+						<div class="entry-icon icon-external-white"></div>
 					</template>
-				</NcActionButton>
-			</TabLinkEntrySimple>
-		</ul>
+
+					<NcActionButton :title="t('cidgravitygateway', 'Copy file CID')" 
+					:aria-label="t('cidgravitygateway', 'Copy file CID')" 
+					@click="copyFileCid">
+						<template #icon>
+							<ClipboardIcon :size="20" />
+						</template>
+					</NcActionButton>
+				</TabLinkEntrySimple>
+			</ul>
+		</div>
 	</div>
 </template>
 
 <script>
+import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
 import TabLinkEntrySimple from '../components/TabLinkEntrySimple.vue'
 import NcActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
-import CheckIcon from 'vue-material-design-icons/Check.vue'
 import ClipboardIcon from 'vue-material-design-icons/ContentCopy.vue'
+import NcEmptyContent from '@nextcloud/vue/dist/Components/NcEmptyContent.js'
+import AlertCircleOutlineIcon from 'vue-material-design-icons/AlertCircleOutline.vue'
 
 import axios from 'axios'
 import { generateOcsUrl } from '@nextcloud/router'
@@ -58,21 +101,39 @@ export default {
 	name: 'GatewayTab',
 
 	components: {
+		NcSelect,
 		TabLinkEntrySimple,
 		NcActionButton,
-		CheckIcon,
+		NcEmptyContent,
 		ClipboardIcon,
+		AlertCircleOutlineIcon,
+	},
+
+	props: {
+		isCidgravityStorage: {
+			type: Boolean,
+			required: true,
+		},
+		isError: {
+			type: Boolean,
+			required: true,
+		},
 	},
 
 	data() {
 		return {
 			loading: true,
+			ipfsGatewayOptions: [
+				{ id: 'gateway.pinata.cloud', label: 'gateway.pinata.cloud', link: 'https://gateway.pinata.cloud/ipfs', isCustom: false },
+				{ id: 'ipfs.io', label: 'ipfs.io', link: 'https://ipfs.io/ipfs', isCustom: false },
+				{ id: 'dweb.link', label: 'dweb.link', link: 'https://dweb.link/ipfs', isCustom: false },
+				{ id: 'Custom gateway', label: 'Custom gateway', link: null, isCustom: true }
+			],
+			selectedOption: null,
 			fileInfo: {},
 			fileMetadata: {},
 			externalStorageConfiguration: {},
-			ipfsGateway: null,
-			copied: false,
-			copySuccess: false,
+			ipfsGateway: {}
 		}
 	},
 
@@ -102,8 +163,11 @@ export default {
 			}
 		},
 		ipfsPublicLink() {
-			return this.ipfsGateway + "/" + this.fileMetadata.cid
+			return this.ipfsGateway.link + "/" + this.fileMetadata.cid
 		},
+		isCustomIpfsGateway() {
+			return this.ipfsGateway.isCustom
+		}
 	},
 
 	beforeDestroy() {
@@ -115,41 +179,26 @@ export default {
 	},
 
 	methods: {
+		onIpfsGatewaySelected(option) {
+			this.ipfsGateway = option
+		},
 		async copyFileCid() {
 			try {
 				await navigator.clipboard.writeText(this.fileMetadata.cid)
 				showSuccess(t('cidgravitygateway', 'CID copied'))
-				this.$refs.cidEntry.$refs.actionsComponent.$el.focus()
-				this.copySuccess = true
-				this.copied = true
 			} catch (error) {
-				this.copySuccess = false
-				this.copied = true
+				showError(t('cidgravitygateway', 'Unable to copy the file CID'))
 				console.error(error)
-			} finally {
-				setTimeout(() => {
-					this.copySuccess = false
-					this.copied = false
-				}, 2000)
 			}
 		},
 		async copyIpfsPublicLink() {
 			try {
-				const publicLink = this.ipfsGateway + "/" + this.fileMetadata.cid
+				const publicLink = this.ipfsGateway.link + "/" + this.fileMetadata.cid
 				await navigator.clipboard.writeText(publicLink)
 				showSuccess(t('cidgravitygateway', 'Public link copied'))
-				this.$refs.ipfsPublicLinkEntry.$refs.actionsComponent.$el.focus()
-				this.copySuccess = true
-				this.copied = true
 			} catch (error) {
-				this.copySuccess = false
-				this.copied = true
+				showError(t('cidgravitygateway', 'Unable to copy the public link'))
 				console.error(error)
-			} finally {
-				setTimeout(() => {
-					this.copySuccess = false
-					this.copied = false
-				}, 2000)
 			}
 		},
 		setFileInfo(fileInfo) {
@@ -157,7 +206,24 @@ export default {
 		},
 		setExternalStorageConfiguration(config) {
 			this.externalStorageConfiguration = config
-			this.ipfsGateway = config.default_ipfs_gateway
+
+			// parse default ipfs gateway to get hostname only
+			// if not in options, set to custom value
+			const parsedUrl = new URL(this.externalStorageConfiguration.default_ipfs_gateway);
+
+			if (this.ipfsGatewayOptions.some(e => e.link === this.externalStorageConfiguration.default_ipfs_gateway)) {
+				this.ipfsGateway = { 
+					id: parsedUrl.hostname, 
+					label: parsedUrl.hostname, 
+					link: this.externalStorageConfiguration.default_ipfs_gateway
+				}
+			} else {
+				this.ipfsGateway = { 
+					id: 'Custom gateway', 
+					label: 'Custom gateway', 
+					link: this.externalStorageConfiguration.default_ipfs_gateway 
+				}
+			}
 		},
 		loadFileMetadata() {
 			axios.get(generateOcsUrl('apps/cidgravitygateway/get-file-metadata?fileId=' + this.fileInfo.id, 2)).then(res => {
@@ -188,6 +254,55 @@ export default {
 	}
 }
 
+.gateway {
+	min-height: 100%;
+	display: flex;
+	flex-direction: column;
+
+	&__empty,
+	&__error {
+		flex: 1 0;
+	}
+
+	&__retry {
+		margin: 0 auto;
+	}
+
+	&__info {
+		height: 60px;
+		color: var(--color-text-maxcontrast);
+		text-align: center;
+		line-height: 60px;
+	}
+}
+
+.ipfs-gateway-select {
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 10px;
+	margin-top: 10px;
+
+	label[for="ipfs-gateway-input"] {
+		margin-bottom: 2px;
+	}
+
+	&__input {
+		width: 100%;
+		margin: 10px 0;
+	}
+}
+
+.ipfs-custom-gateway-input {
+	display: flex;
+	flex-direction: column;
+	margin-bottom: 10px;
+
+	&__input {
+		width: 100%;
+		margin: 10px 0;
+	}
+}
+
 .menu-entry__internal {
 	.entry-icon {
 		width: 32px;
@@ -198,6 +313,17 @@ export default {
 		border-radius: 50%;
 		flex-shrink: 0;
 	}
+
+	.entry-icon-primary {
+		width: 32px;
+		height: 32px;
+		line-height: 32px;
+		font-size: 18px;
+		background-color: var(--color-primary-element);
+		border-radius: 50%;
+		flex-shrink: 0;
+	}
+
 	.icon-checkmark-color {
 		opacity: 1;
 		color: var(--color-success);

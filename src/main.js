@@ -5,6 +5,7 @@ import { generateOcsUrl } from '@nextcloud/router'
 import { translate, translatePlural } from 'nextcloud-l10n'
 
 import GatewayTab from './views/GatewayTab.vue'
+import CustomIcon from './custom-icon.svg' // Import your custom SVG icon
 
 Vue.prototype.t = translate
 Vue.prototype.n = translatePlural
@@ -17,8 +18,9 @@ window.addEventListener('DOMContentLoaded', function() {
 		const gatewayTab = new OCA.Files.Sidebar.Tab({
 			id: 'cidgravitygateway',
 			name: t('cidgravitygateway', 'CIDgravity'),
-			icon: 'icon-rename',
-
+			icon: CustomIcon,
+			iconSvg: CustomIcon,
+			
 			mount(el, fileInfo, context) {
 				if (tabInstance) {
 					tabInstance.$destroy()
@@ -32,21 +34,43 @@ window.addEventListener('DOMContentLoaded', function() {
 							if (response.data.configuration.is_cidgravity) {
 								tabInstance = new View({
 									parent: context,
+									propsData: {
+										isCidgravityStorage: true,
+										isError: false,
+									},
 								})
 								
 								tabInstance.setExternalStorageConfiguration(response.data.configuration)
 								tabInstance.setFileInfo(fileInfo)	
-								tabInstance.loadFileMetadata()		
-								tabInstance.$mount(el)
+								tabInstance.loadFileMetadata()	
+								tabInstance.$mount(el)	
 							}
 						}
 
 					}).catch((error) => {
 						console.error(error)
+
+						tabInstance = new View({
+							parent: context,
+							propsData: {
+								isCidgravityStorage: false,
+								isError: true,
+							},
+						})
+
+						tabInstance.$mount(el)
 					})
 
 				} else {
-					tabInstance.$destroy()
+					tabInstance = new View({
+						parent: context,
+						propsData: {
+							isCidgravityStorage: false,
+							isError: false,
+						},
+					})
+
+					tabInstance.$mount(el)
 				}
 			},
 
