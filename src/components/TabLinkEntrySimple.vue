@@ -1,23 +1,24 @@
 <template>
 	<div v-if="hasLink">
-		<a :href="link" target="_blank" rel="noopener noreferrer">
-			<li class="sharing-entry">
-				<slot name="avatar" />
+		<li class="sharing-entry">
+			<slot name="avatar" />
+			<a :href="link" target="_blank" rel="noopener noreferrer">
 				<div class="sharing-entry__desc">
 					<span class="sharing-entry__title">{{ title }}</span>
 					<p v-if="subtitle">
 						{{ subtitle }}
 					</p>
 				</div>
-				<NcActions v-if="$slots['default']"
-					ref="actionsComponent"
-					class="sharing-entry__actions"
-					menu-align="right"
-					:aria-expanded="ariaExpandedValue">
-					<slot />
-				</NcActions>
-			</li>
-		</a>
+			</a>
+
+			<NcActions v-if="$slots['default']"
+				ref="actionsComponent"
+				class="sharing-entry__actions"
+				menu-align="right"
+				:aria-expanded="ariaExpandedValue">
+				<slot />
+			</NcActions>
+		</li>
 	</div>
 
 	<div v-else>
