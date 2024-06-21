@@ -71,7 +71,7 @@ export default {
 		link: {
 			type: String,
 			default: '',
-		}
+		},
 	},
 
 	computed: {
@@ -83,7 +83,7 @@ export default {
 		},
 		hasLink() {
 			return this.link !== ''
-		}
+		},
 	},
 }
 </script>

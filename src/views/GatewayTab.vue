@@ -1,6 +1,5 @@
 <template>
-	<div class="tabContent" :class="{ 'icon-loading': loading }">	
-
+	<div class="tabContent" :class="{ 'icon-loading': loading }">
 		<!-- Not a CIDgravity storage, nothing to display -->
 		<NcEmptyContent v-if="!isCidgravityStorage && !isError"
 			class="emptyContent"
@@ -38,13 +37,11 @@
 			</div>
 
 			<div v-if="isCustomIpfsGateway" class="ipfs-custom-gateway-input">
-				<input 
-					v-model="ipfsGateway.link" 
-					input-id="ipfs-custom-gateway-input" 
+				<input v-model="ipfsGateway.link"
+					input-id="ipfs-custom-gateway-input"
 					:placeholder="t('cidgravitygateway', 'Type your custom IPFS gateway link, ending with /ipfs')"
 					type="text"
-					style="width: 100%; margin-top: 10px; margin-bottom: 10px;"
-				>
+					style="width: 100%; margin-top: 10px; margin-bottom: 10px;">
 			</div>
 
 			<ul v-if="!loading" style="margin-top: 30px;">
@@ -52,39 +49,35 @@
 					<h3>{{ getMetadataSectionTitle }}</h3>
 				</strong>
 
-				<TabLinkEntrySimple 
-					ref="ipfsPublicLinkEntry" 
-					class="menu-entry__internal" 
+				<TabLinkEntrySimple ref="ipfsPublicLinkEntry"
+					class="menu-entry__internal"
 					:title="t('cidgravitygateway', 'IPFS public link')"
 					:subtitle="t('cidgravitygateway', 'Click to open the IPFS link')"
-					:link="ipfsPublicLink"
-					>
+					:link="ipfsPublicLink">
 					<template #avatar>
-						<div class="entry-icon-primary icon-public-white"></div>
+						<div class="entry-icon-primary icon-public-white" />
 					</template>
 
-					<NcActionButton :title="t('cidgravitygateway', 'Copy public link')" 
-					:aria-label="t('cidgravitygateway', 'Copy public link')" 
-					@click="copyIpfsPublicLink">
+					<NcActionButton :title="t('cidgravitygateway', 'Copy public link')"
+						:aria-label="t('cidgravitygateway', 'Copy public link')"
+						@click="copyIpfsPublicLink">
 						<template #icon>
 							<ClipboardIcon :size="20" />
 						</template>
 					</NcActionButton>
 				</TabLinkEntrySimple>
 
-				<TabLinkEntrySimple 
-					ref="cidEntry" 
-					class="menu-entry__internal" 
+				<TabLinkEntrySimple ref="cidEntry"
+					class="menu-entry__internal"
 					:title="t('cidgravitygateway', 'CID')"
-					:subtitle="shortenedCid"
-					>
+					:subtitle="shortenedCid">
 					<template #avatar>
-						<div class="entry-icon icon-triangle-e-white"></div>
+						<div class="entry-icon icon-triangle-e-white" />
 					</template>
 
-					<NcActionButton :title="t('cidgravitygateway', 'Copy CID')" 
-					:aria-label="t('cidgravitygateway', 'Copy CID')" 
-					@click="copyCid">
+					<NcActionButton :title="t('cidgravitygateway', 'Copy CID')"
+						:aria-label="t('cidgravitygateway', 'Copy CID')"
+						@click="copyCid">
 						<template #icon>
 							<ClipboardIcon :size="20" />
 						</template>
@@ -105,7 +98,7 @@ import AlertCircleOutlineIcon from 'vue-material-design-icons/AlertCircleOutline
 
 import axios from 'axios'
 import { generateOcsUrl } from '@nextcloud/router'
-import { showSuccess } from '@nextcloud/dialogs'
+import { showSuccess, showError } from '@nextcloud/dialogs'
 
 export default {
 	name: 'GatewayTab',
@@ -137,13 +130,13 @@ export default {
 				{ id: 'gateway.pinata.cloud', label: 'gateway.pinata.cloud', link: 'https://gateway.pinata.cloud/ipfs', isCustom: false },
 				{ id: 'ipfs.io', label: 'ipfs.io', link: 'https://ipfs.io/ipfs', isCustom: false },
 				{ id: 'dweb.link', label: 'dweb.link', link: 'https://dweb.link/ipfs', isCustom: false },
-				{ id: 'Custom gateway', label: 'Custom gateway', link: null, isCustom: true }
+				{ id: 'Custom gateway', label: 'Custom gateway', link: null, isCustom: true },
 			],
 			selectedOption: null,
 			fileInfo: {},
 			fileMetadata: {},
 			externalStorageConfiguration: {},
-			ipfsGateway: {}
+			ipfsGateway: {},
 		}
 	},
 
@@ -158,23 +151,23 @@ export default {
 			return this.$parent.activeTab
 		},
 		emptyContentTitle() {
-			if (this.fileInfo && this.fileInfo.mountType === "external") {
+			if (this.fileInfo && this.fileInfo.mountType === 'external') {
 				return this.t('cidgravitygateway', 'Not on an external storage')
 			}
 
 			return this.t('cidgravitygateway', 'Not on an CIDgravity storage')
 		},
 		getMetadataSectionTitle() {
-			if (this.fileInfo.type === "dir") {
+			if (this.fileInfo.type === 'dir') {
 				return this.t('cidgravitygateway', 'Directory metadata')
 			} else {
 				return this.t('cidgravitygateway', 'File metadata')
 			}
 		},
 		emptyContentDescription() {
-			const contentType = this.fileInfo.type === "dir" ? "directory" : "file"
+			const contentType = this.fileInfo.type === 'dir' ? 'directory' : 'file'
 
-			if (this.fileInfo && this.fileInfo.mountType === "external") {
+			if (this.fileInfo && this.fileInfo.mountType === 'external') {
 				return this.t('cidgravitygateway', 'This {contentType} is not on an external storage. To display metadata, you must browse files on external storage', { contentType })
 			}
 
@@ -184,9 +177,9 @@ export default {
 			if (this.fileMetadata.cid !== null && this.fileMetadata.cid !== '' && this.fileMetadata.cid !== undefined) {
 				if (this.fileMetadata.cid.length > 15) {
 					return (
-						this.fileMetadata.cid.substring(0, 5) +
-						' [...] ' +
-						this.fileMetadata.cid.substring(this.fileMetadata.cid.length - 5, this.fileMetadata.cid.length)
+						this.fileMetadata.cid.substring(0, 5)
+						+ ' [...] '
+						+ this.fileMetadata.cid.substring(this.fileMetadata.cid.length - 5, this.fileMetadata.cid.length)
 					)
 				} else {
 					return this.fileMetadata.cid
@@ -196,11 +189,11 @@ export default {
 			}
 		},
 		ipfsPublicLink() {
-			return this.ipfsGateway.link + "/" + this.fileMetadata.cid
+			return this.ipfsGateway.link + '/' + this.fileMetadata.cid
 		},
 		isCustomIpfsGateway() {
 			return this.ipfsGateway.isCustom
-		}
+		},
 	},
 
 	beforeDestroy() {
@@ -229,7 +222,7 @@ export default {
 		},
 		async copyIpfsPublicLink() {
 			try {
-				const publicLink = this.ipfsGateway.link + "/" + this.fileMetadata.cid
+				const publicLink = this.ipfsGateway.link + '/' + this.fileMetadata.cid
 				await navigator.clipboard.writeText(publicLink)
 				showSuccess(t('cidgravitygateway', 'Public link copied'))
 			} catch (error) {
@@ -241,30 +234,30 @@ export default {
 			this.fileInfo = fileInfo
 		},
 		setIsCidgravityStorage(isCidgravityStorage) {
-			this.isCidgravityStorage = isCidgravityStorage
+			this.$emit('update:isCidgravityStorage', isCidgravityStorage)
 		},
 		setIsError(isError) {
-			this.isError = isError
+			this.$emit('update:isError', isError)
 		},
 		setExternalStorageConfiguration(config) {
 			this.externalStorageConfiguration = config
-			this.isCidgravityStorage = true
+			this.$emit('update:isCidgravityStorage', true)
 
 			// parse default ipfs gateway to get hostname only
 			// if not in options, set to custom value
-			const parsedUrl = new URL(this.externalStorageConfiguration.default_ipfs_gateway);
+			const parsedUrl = new URL(this.externalStorageConfiguration.default_ipfs_gateway)
 
 			if (this.ipfsGatewayOptions.some(e => e.link === this.externalStorageConfiguration.default_ipfs_gateway)) {
-				this.ipfsGateway = { 
-					id: parsedUrl.hostname, 
-					label: parsedUrl.hostname, 
-					link: this.externalStorageConfiguration.default_ipfs_gateway
+				this.ipfsGateway = {
+					id: parsedUrl.hostname,
+					label: parsedUrl.hostname,
+					link: this.externalStorageConfiguration.default_ipfs_gateway,
 				}
 			} else {
-				this.ipfsGateway = { 
-					id: 'Custom gateway', 
-					label: 'Custom gateway', 
-					link: this.externalStorageConfiguration.default_ipfs_gateway 
+				this.ipfsGateway = {
+					id: 'Custom gateway',
+					label: 'Custom gateway',
+					link: this.externalStorageConfiguration.default_ipfs_gateway,
 				}
 			}
 		},
@@ -272,16 +265,16 @@ export default {
 			axios.get(generateOcsUrl('apps/cidgravitygateway/get-file-metadata?fileId=' + this.fileInfo.id, 2)).then(res => {
 				if (res.data.success) {
 					this.fileMetadata = res.data.metadata
-					this.isCidgravityStorage = true
-					this.isError = false
+					this.$emit('update:isCidgravityStorage', true)
+					this.$emit('update:isError', false)
 					this.loading = false
 				}
 			}).catch((error) => {
 				console.error(error)
 				this.loading = false
-				this.isError = true
+				this.$emit('update:isError', true)
 			})
-		}
+		},
 	},
 }
 </script>
