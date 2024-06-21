@@ -1,10 +1,11 @@
 <template>
-	<div>	
+	<div class="tabContent" :class="{ 'icon-loading': loading }">	
 
 		<!-- Not a CIDgravity storage, nothing to display -->
 		<NcEmptyContent v-if="!isCidgravityStorage && !isError"
-			class="gateway__empty"
-			:name="t('cidgravitygateway', 'This file is not on an CIDgravity storage')">
+			class="emptyContent"
+			:name="emptyContentTitle"
+			:description="emptyContentDescription">
 			<template #icon>
 				<AlertCircleOutlineIcon />
 			</template>
@@ -12,22 +13,26 @@
 
 		<!-- Error loading storage type -->
 		<NcEmptyContent v-if="isError"
-			class="gateway__empty"
-			:name="t('cidgravitygateway', 'Something wrong while loading the file metadata')">
+			class="emptyContent"
+			:name="t('cidgravitygateway', 'Something wrong while loading metadata')">
 			<template #icon>
 				<AlertCircleOutlineIcon />
 			</template>
 		</NcEmptyContent>
 
 		<!-- CIDgravity storage: display all metadata -->
-		<div v-if="isCidgravityStorage && !isError" class="tabContent" :class="{ 'icon-loading': loading }">
+		<div v-if="isCidgravityStorage && !isError">
 			<div class="ipfs-gateway-select">
+				<strong>
+					<h3>{{ t('cidgravitygateway', 'Choose an IPFS gateway to use for links') }}</h3>
+				</strong>
+
 				<NcSelect ref="select"
 					v-model="ipfsGateway"
 					input-id="ipfs-gateway-input"
 					class="ipfs-gateway__input"
 					:loading="loading"
-					:placeholder="t('cidgravitygateway', 'Choose an IPFS gateway to use')"
+					:placeholder="t('cidgravitygateway', 'Choose an IPFS gateway to use for links')"
 					:options="ipfsGatewayOptions"
 					@option:selected="onIpfsGatewaySelected" />
 			</div>
@@ -36,18 +41,23 @@
 				<input 
 					v-model="ipfsGateway.link" 
 					input-id="ipfs-custom-gateway-input" 
-					:placeholder="t('cidgravitygateway', 'Type your IPFS gateway link, ending with /ipfs')"
+					:placeholder="t('cidgravitygateway', 'Type your custom IPFS gateway link, ending with /ipfs')"
 					type="text"
 					style="width: 100%; margin-top: 10px; margin-bottom: 10px;"
 				>
 			</div>
 
-			<ul v-if="!loading">
+			<ul v-if="!loading" style="margin-top: 30px;">
+				<strong>
+					<h3>{{ getMetadataSectionTitle }}</h3>
+				</strong>
+
 				<TabLinkEntrySimple 
 					ref="ipfsPublicLinkEntry" 
 					class="menu-entry__internal" 
 					:title="t('cidgravitygateway', 'IPFS public link')"
 					:subtitle="t('cidgravitygateway', 'Click to open the IPFS link')"
+					:link="ipfsPublicLink"
 					>
 					<template #avatar>
 						<div class="entry-icon-primary icon-public-white"></div>
@@ -65,16 +75,16 @@
 				<TabLinkEntrySimple 
 					ref="cidEntry" 
 					class="menu-entry__internal" 
-					:title="t('cidgravitygateway', 'File CID')"
-					:subtitle="shortenedFileCid"
+					:title="t('cidgravitygateway', 'CID')"
+					:subtitle="shortenedCid"
 					>
 					<template #avatar>
-						<div class="entry-icon icon-external-white"></div>
+						<div class="entry-icon icon-triangle-e-white"></div>
 					</template>
 
-					<NcActionButton :title="t('cidgravitygateway', 'Copy file CID')" 
-					:aria-label="t('cidgravitygateway', 'Copy file CID')" 
-					@click="copyFileCid">
+					<NcActionButton :title="t('cidgravitygateway', 'Copy CID')" 
+					:aria-label="t('cidgravitygateway', 'Copy CID')" 
+					@click="copyCid">
 						<template #icon>
 							<ClipboardIcon :size="20" />
 						</template>
@@ -147,7 +157,30 @@ export default {
 		activeTab() {
 			return this.$parent.activeTab
 		},
-		shortenedFileCid() {
+		emptyContentTitle() {
+			if (this.fileInfo && this.fileInfo.mountType === "external") {
+				return this.t('cidgravitygateway', 'Not on an external storage')
+			}
+
+			return this.t('cidgravitygateway', 'Not on an CIDgravity storage')
+		},
+		getMetadataSectionTitle() {
+			if (this.fileInfo.type === "dir") {
+				return this.t('cidgravitygateway', 'Directory metadata')
+			} else {
+				return this.t('cidgravitygateway', 'File metadata')
+			}
+		},
+		emptyContentDescription() {
+			const contentType = this.fileInfo.type === "dir" ? "directory" : "file"
+
+			if (this.fileInfo && this.fileInfo.mountType === "external") {
+				return this.t('cidgravitygateway', 'This {contentType} is not on an external storage. To display metadata, you must browse files on external storage', { contentType })
+			}
+
+			return this.t('cidgravitygateway', 'This {contentType} is not on an CIDgravity storage type. To display metadata, you must browse files on external storage', { contentType })
+		},
+		shortenedCid() {
 			if (this.fileMetadata.cid !== null && this.fileMetadata.cid !== '' && this.fileMetadata.cid !== undefined) {
 				if (this.fileMetadata.cid.length > 15) {
 					return (
@@ -179,15 +212,18 @@ export default {
 	},
 
 	methods: {
+		setLoading(loading) {
+			this.loading = loading
+		},
 		onIpfsGatewaySelected(option) {
 			this.ipfsGateway = option
 		},
-		async copyFileCid() {
+		async copyCid() {
 			try {
 				await navigator.clipboard.writeText(this.fileMetadata.cid)
 				showSuccess(t('cidgravitygateway', 'CID copied'))
 			} catch (error) {
-				showError(t('cidgravitygateway', 'Unable to copy the file CID'))
+				showError(t('cidgravitygateway', 'Unable to copy the CID'))
 				console.error(error)
 			}
 		},
@@ -204,8 +240,15 @@ export default {
 		setFileInfo(fileInfo) {
 			this.fileInfo = fileInfo
 		},
+		setIsCidgravityStorage(isCidgravityStorage) {
+			this.isCidgravityStorage = isCidgravityStorage
+		},
+		setIsError(isError) {
+			this.isError = isError
+		},
 		setExternalStorageConfiguration(config) {
 			this.externalStorageConfiguration = config
+			this.isCidgravityStorage = true
 
 			// parse default ipfs gateway to get hostname only
 			// if not in options, set to custom value
@@ -229,11 +272,14 @@ export default {
 			axios.get(generateOcsUrl('apps/cidgravitygateway/get-file-metadata?fileId=' + this.fileInfo.id, 2)).then(res => {
 				if (res.data.success) {
 					this.fileMetadata = res.data.metadata
+					this.isCidgravityStorage = true
+					this.isError = false
 					this.loading = false
 				}
 			}).catch((error) => {
 				console.error(error)
 				this.loading = false
+				this.isError = true
 			})
 		}
 	},
@@ -254,26 +300,11 @@ export default {
 	}
 }
 
-.gateway {
-	min-height: 100%;
-	display: flex;
-	flex-direction: column;
-
-	&__empty,
-	&__error {
-		flex: 1 0;
-	}
-
-	&__retry {
-		margin: 0 auto;
-	}
-
-	&__info {
-		height: 60px;
-		color: var(--color-text-maxcontrast);
-		text-align: center;
-		line-height: 60px;
-	}
+.emptyContent {
+	margin-top: 50%;
+	width: 100%;
+	padding: 10px;
+	text-align: center;
 }
 
 .ipfs-gateway-select {

@@ -1,20 +1,43 @@
 <template>
-	<li class="sharing-entry">
-		<slot name="avatar" />
-		<div class="sharing-entry__desc">
-			<span class="sharing-entry__title">{{ title }}</span>
-			<p v-if="subtitle">
-				{{ subtitle }}
-			</p>
-		</div>
-		<NcActions v-if="$slots['default']"
-			ref="actionsComponent"
-			class="sharing-entry__actions"
-			menu-align="right"
-			:aria-expanded="ariaExpandedValue">
-			<slot />
-		</NcActions>
-	</li>
+	<div v-if="hasLink">
+		<a :href="link" target="_blank" rel="noopener noreferrer">
+			<li class="sharing-entry">
+				<slot name="avatar" />
+				<div class="sharing-entry__desc">
+					<span class="sharing-entry__title">{{ title }}</span>
+					<p v-if="subtitle">
+						{{ subtitle }}
+					</p>
+				</div>
+				<NcActions v-if="$slots['default']"
+					ref="actionsComponent"
+					class="sharing-entry__actions"
+					menu-align="right"
+					:aria-expanded="ariaExpandedValue">
+					<slot />
+				</NcActions>
+			</li>
+		</a>
+	</div>
+
+	<div v-else>
+		<li class="sharing-entry">
+			<slot name="avatar" />
+			<div class="sharing-entry__desc">
+				<span class="sharing-entry__title">{{ title }}</span>
+				<p v-if="subtitle">
+					{{ subtitle }}
+				</p>
+			</div>
+			<NcActions v-if="$slots['default']"
+				ref="actionsComponent"
+				class="sharing-entry__actions"
+				menu-align="right"
+				:aria-expanded="ariaExpandedValue">
+				<slot />
+			</NcActions>
+		</li>
+	</div>
 </template>
 
 <script>
@@ -45,6 +68,10 @@ export default {
 			type: Boolean,
 			default: null,
 		},
+		link: {
+			type: String,
+			default: '',
+		}
 	},
 
 	computed: {
@@ -54,6 +81,9 @@ export default {
 			}
 			return this.ariaExpanded ? 'true' : 'false'
 		},
+		hasLink() {
+			return this.link !== ''
+		}
 	},
 }
 </script>
