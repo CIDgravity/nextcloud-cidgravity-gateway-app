@@ -1,6 +1,6 @@
 {
     "name": "nextcloud/cidgravitygateway",
-    "description": "A simple share link renamer add-in for the Files app",
+    "description": "An application to display files/directory metadata on decentralized web for CIDgravity storage files",
     "type": "project",
     "license": "AGPL",
     "authors": [
