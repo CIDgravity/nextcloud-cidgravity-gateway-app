@@ -43,23 +43,21 @@ class HttpRequestService {
         curl_setopt($this->ch, CURLOPT_POSTFIELDS, $jsonData);
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
 
-        // build headers
+        // configure request headers
         $headers = ['Content-Type: application/json'];
-
-        // if username and password provided, add headers for basic authentication
-        if ($username !== null && $password !== null) {
-            array_push($headers, "X-Username: $username");
-            array_push($headers, "X-Password: $password");
-        }
-
-        // set header in curl configuration
         curl_setopt($this->ch, CURLOPT_HTTPHEADER, $headers);
+
+        // add basic authentication credentials
+        // this config will automatically encode username:password as base64 and set the Authorization header
+        // Authorization will be Basic [GENERATED_BASE64_STRING]
+        curl_setopt($this->ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        curl_setopt($this->ch, CURLOPT_USERPWD, "$username:$password");
 
         // execute the request
         $response = curl_exec($this->ch);
 
         // check for errors
-        if ($error = curl_errno($this->ch)) {
+        if (curl_errno($this->ch)) {
             $errorMessage = curl_error($this->ch);
             throw new Exception("cURL Error: $errorMessage");
         }
