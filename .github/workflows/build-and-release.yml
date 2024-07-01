@@ -31,9 +31,7 @@ jobs:
 
       - name: Archive the artifacts
         run: |
-          cd cidgravitygateway
-          zip -r ../project-build.zip .
-          cd ..
+          zip -r nextcloud-app.zip cidgravitygateway
 
       - name: Create GitHub Release
         id: create_release
@@ -42,7 +40,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
+          release_name: ${{ github.ref_name }}
           draft: false
           prerelease: false
 
@@ -52,6 +50,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./project-build.zip
-          asset_name: project-build.zip
+          asset_path: ./nextcloud-app.zip
+          asset_name: nextcloud-app.zip
           asset_content_type: application/zip
