@@ -62,12 +62,12 @@ class ExternalStorageController extends Controller {
         try {
 
             if (!is_int($fileId)) {
-                return new DataResponse(['error' => 'invalid param fileId provided'], Http::STATUS_BAD_REQUEST);
+                return new DataResponse(['success' => false, 'error' => 'invalid param fileId provided'], Http::STATUS_BAD_REQUEST);
             }
 
             $user = $this->userSession->getUser();
             if (!$user) {
-                return new DataResponse(['error' => 'user not logged in'], Http::STATUS_INTERNAL_SERVER_ERROR);
+                return new DataResponse(['success' => false, 'error' => 'user not logged in'], Http::STATUS_INTERNAL_SERVER_ERROR);
             }
 
             $fileMetadata = $this->externalStorageService->getMetadataForSpecificFile($user, $fileId);
@@ -76,7 +76,11 @@ class ExternalStorageController extends Controller {
                 return new DataResponse(['success' => true, 'metadata' => $fileMetadata['metadata']], Http::STATUS_OK); 
             }
 
-            return new DataResponse(['success' => false, 'error' => $fileMetadata['message']], Http::STATUS_INTERNAL_SERVER_ERROR);
+            return new DataResponse([
+                'success' => false, 
+                'error' => $fileMetadata['error'],
+                'errorMessage' => $fileMetadata['metadata']
+            ], Http::STATUS_INTERNAL_SERVER_ERROR);
 
         } catch (Exception $e) {
             return new DataResponse(['success' => false, 'error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);

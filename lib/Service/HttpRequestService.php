@@ -62,7 +62,15 @@ class HttpRequestService {
             throw new Exception("cURL Error: $errorMessage");
         }
 
-        return json_decode($response, true);
+        // get HTTP status code
+        $statusCode = curl_getinfo($this->ch, CURLINFO_HTTP_CODE);
+
+        // handle HTTP status code
+        if ($statusCode >= 200 && $statusCode < 300) {
+            return json_decode($response, true);
+        } else {
+            throw new Exception("HTTP Error: $statusCode");
+        }
     }
 
     public function __destruct() {

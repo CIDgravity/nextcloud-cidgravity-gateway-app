@@ -70,7 +70,7 @@ class ExternalStorageService {
             }
 
         } catch (Exception $e) {
-            return ['message' => 'error getting external storage config', 'error' => $e->getMessage()];
+            return ['message' => 'error getting metadata for file ' . $fileId, 'error' => $e->getMessage()];
         }
 	}
 

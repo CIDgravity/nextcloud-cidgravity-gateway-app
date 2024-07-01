@@ -1,7 +1,7 @@
 <template>
 	<div class="tabContent" :class="{ 'icon-loading': loading }">
 		<!-- Not a CIDgravity storage, nothing to display -->
-		<NcEmptyContent v-if="!isCidgravityStorage && !isError"
+		<NcEmptyContent v-if="!isCidgravityStorageLocal"
 			class="emptyContent"
 			:name="emptyContentTitle"
 			:description="emptyContentDescription">
@@ -11,7 +11,7 @@
 		</NcEmptyContent>
 
 		<!-- Error loading storage type -->
-		<NcEmptyContent v-if="isError"
+		<NcEmptyContent v-else-if="isErrorLocal"
 			class="emptyContent"
 			:name="t('cidgravitygateway', 'Something wrong while loading metadata')">
 			<template #icon>
@@ -20,7 +20,7 @@
 		</NcEmptyContent>
 
 		<!-- CIDgravity storage: display all metadata -->
-		<div v-if="isCidgravityStorage && !isError">
+		<div v-else>
 			<div class="ipfs-gateway-select">
 				<strong>
 					<h3>{{ t('cidgravitygateway', 'Choose an IPFS gateway to use for links') }}</h3>
@@ -137,6 +137,8 @@ export default {
 			fileMetadata: {},
 			externalStorageConfiguration: {},
 			ipfsGateway: {},
+			isErrorLocal: this.isError,
+			isCidgravityStorageLocal: this.isCidgravityStorage
 		}
 	},
 
@@ -234,14 +236,14 @@ export default {
 			this.fileInfo = fileInfo
 		},
 		setIsCidgravityStorage(isCidgravityStorage) {
-			this.$emit('update:isCidgravityStorage', isCidgravityStorage)
+			this.isCidgravityStorageLocal = isCidgravityStorage
 		},
 		setIsError(isError) {
-			this.$emit('update:isError', isError)
+			this.isErrorLocal = isError
 		},
 		setExternalStorageConfiguration(config) {
 			this.externalStorageConfiguration = config
-			this.$emit('update:isCidgravityStorage', true)
+			this.isCidgravityStorageLocal = true
 
 			// parse default ipfs gateway to get hostname only
 			// if not in options, set to custom value
@@ -265,14 +267,19 @@ export default {
 			axios.get(generateOcsUrl('apps/cidgravitygateway/get-file-metadata?fileId=' + this.fileInfo.id, 2)).then(res => {
 				if (res.data.success) {
 					this.fileMetadata = res.data.metadata
-					this.$emit('update:isCidgravityStorage', true)
-					this.$emit('update:isError', false)
+					this.isCidgravityStorageLocal = true
+					this.isErrorLocal = false
 					this.loading = false
+				} else {
+					console.error('unable to load file metadata')
+					this.fileMetadata = {}
+					this.loading = false
+					this.isErrorLocal = true
 				}
 			}).catch((error) => {
 				console.error(error)
 				this.loading = false
-				this.$emit('update:isError', true)
+				this.isErrorLocal = true
 			})
 		},
 	},
