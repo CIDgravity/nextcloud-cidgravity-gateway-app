@@ -24,8 +24,16 @@ jobs:
       - name: Build the project
         run: npm run build
 
-      - name: Archive the repository excluding node_modules
-        run: zip -r project-build.zip . -x "node_modules/*"
+      - name: Prepare zip folder
+        run: |
+          mkdir cidgravitygateway
+          rsync -av --progress . ./cidgravitygateway --exclude node_modules --exclude .git --exclude cidgravitygateway
+
+      - name: Archive the artifacts
+        run: |
+          cd cidgravitygateway
+          zip -r ../project-build.zip .
+          cd ..
 
       - name: Create GitHub Release
         id: create_release
