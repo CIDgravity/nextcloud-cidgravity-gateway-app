@@ -1,19 +1,49 @@
+name: Build and Release
+
 on:
   push:
-    branches:
-      - main
-
-permissions:
-  contents: write
-  pull-requests: write
-
-name: release-please
+    tags:
+      - 'v*.*.*' # This triggers the workflow on version tags (e.g., v1.0.0)
 
 jobs:
-  release-please:
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: googleapis/release-please-action@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          release-type: node
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the project
+        run: npm run build
+
+      - name: Archive the entire repository
+        run: zip -r project-build.zip .
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./project-build.zip
+          asset_name: project-build.zip
+          asset_content_type: application/zip
