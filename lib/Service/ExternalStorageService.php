@@ -24,20 +24,30 @@
 namespace OCA\CidgravityGateway\Service;
 
 use Exception;
-use OCP\Files\Config\ICachedMountFileInfo;
 use OCP\IUser;
 use OCP\Files\Config\IUserMountCache;
 use OCP\Files\IRootFolder;
 use OCA\Files_External\Service\GlobalStoragesService;
 use Psr\Log\LoggerInterface;
 use OCA\Files_External\Lib\StorageConfig;
+use OCA\Files_External\Config\UserPlaceholderHandler;
 
 use OCA\Files_External\NotFoundException;
 use OCP\Files\StorageNotAvailableException;
 
+use OCP\IRequest;
+use OCP\IUserManager;
+use OCP\Share\IManager;
+
 class ExternalStorageService {
 
-	public function __construct(private LoggerInterface $logger, private IUserMountCache $test, private IRootFolder $rootFolder, private GlobalStoragesService $globalStoragesService, private HttpRequestService $httpClient) {}
+    private UserPlaceholderHandler $userConfigHandler;
+
+	public function __construct(private LoggerInterface $logger, private IUserMountCache $userMountCache, private IRootFolder $rootFolder, private GlobalStoragesService $globalStoragesService, private HttpRequestService $httpClient,
+    private IRequest $request, private IUserManager $userManager, private IManager $shareManager) {
+        $userSession = \OC::$server->getUserSession();
+        $this->userConfigHandler = new UserPlaceholderHandler($userSession, $shareManager, $request, $userManager);
+    }
 
     /**
 	 * Get the metadata from the external storage metadata endpoint for specific file
@@ -83,7 +93,7 @@ class ExternalStorageService {
 	 */
     public function getExternalStorageConfigurationForSpecificFile(IUser $nextcloudUser, int $fileId, bool $includeAuthSettings): array {
         try {
-            $mountsForFile = $this->test->getMountsForFileId($fileId, $nextcloudUser->getUID());
+            $mountsForFile = $this->userMountCache->getMountsForFileId($fileId, $nextcloudUser->getUID());
 
             if (empty($mountsForFile)) {
                 return ['message' => 'no external storage found for file ' . $fileId, 'error' => 'external_storage_not_found'];
@@ -125,9 +135,12 @@ class ExternalStorageService {
         $configuration['metadata_endpoint'] = $externalStorage->getBackendOption('metadata_endpoint');
         $configuration['default_ipfs_gateway'] = $externalStorage->getBackendOption('default_ipfs_gateway');
         
-        // add filepath (with the mount point folder, must begin with a /)
+        // resolve the remote subfolder config (if it contains $user, will be automatically replaced by userID)
+        // this will help when sending metadata request to API endpoint
+        $resolvedMountpoint = $this->userConfigHandler->handle($externalStorage->getBackendOption('root'));
+
         // if the mountpoint is not empty, prepend a slash
-        $mountpoint = trim($externalStorage->getBackendOption('root'), '/');
+        $mountpoint = trim($resolvedMountpoint, '/');
         $filename = ltrim($fileInternalPath, '/');
         
         if ($mountpoint !== '') {
