@@ -52,8 +52,8 @@ class ExternalStorageService {
 
             if (!isset($externalStorageConfiguration['error'])) {
                 $requestBody = [
-                    "fileOwner" => $nextcloudUser->getUID(),
-                    "filePath" => $externalStorageConfiguration['filepath'],
+                    "user" => $nextcloudUser->getUID(),
+                    "filepath" => $externalStorageConfiguration['filepath'],
                 ];
 
                 $response = $this->httpClient->post(
@@ -63,7 +63,7 @@ class ExternalStorageService {
                     $externalStorageConfiguration['password'],
                 );
 
-                return ['metadata' => $response];
+                return ['result' => $response];
 
             } else {
                 return $externalStorageConfiguration;
@@ -125,8 +125,16 @@ class ExternalStorageService {
         $configuration['metadata_endpoint'] = $externalStorage->getBackendOption('metadata_endpoint');
         $configuration['default_ipfs_gateway'] = $externalStorage->getBackendOption('default_ipfs_gateway');
         
-        // add file internal path (without the mount point folder, only the path after)
-        $configuration['filepath'] = $fileInternalPath;
+        // add filepath (with the mount point folder, must begin with a /)
+        // if the mountpoint is not empty, prepend a slash
+        $mountpoint = trim($externalStorage->getBackendOption('root'), '/');
+        $filename = ltrim($fileInternalPath, '/');
+        
+        if ($mountpoint !== '') {
+            $configuration['filepath'] = '/' . $mountpoint . '/' . $filename;
+        } else {
+            $configuration['filepath'] = '/' . $filename;
+        }
 
         // check if we need to include auth settings (for metadata call only, not exposed to frontend)
         if ($includeAuthSettings) {

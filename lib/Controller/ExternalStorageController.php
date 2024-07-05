@@ -73,13 +73,17 @@ class ExternalStorageController extends Controller {
             $fileMetadata = $this->externalStorageService->getMetadataForSpecificFile($user, $fileId);
 
             if (!isset($fileMetadata['error'])) {
-                return new DataResponse(['success' => true, 'metadata' => $fileMetadata['metadata']], Http::STATUS_OK); 
+                if ($fileMetadata['result']['success']) {
+                    return new DataResponse(['success' => true, 'metadata' => $fileMetadata['result']], Http::STATUS_OK);  
+                } else {
+                    return new DataResponse(['success' => false, 'error' => $fileMetadata['result']['error']], Http::STATUS_OK); 
+                } 
             }
 
             return new DataResponse([
                 'success' => false, 
                 'error' => $fileMetadata['error'],
-                'errorMessage' => $fileMetadata['metadata']
+                'errorMessage' => $fileMetadata['result']
             ], Http::STATUS_INTERNAL_SERVER_ERROR);
 
         } catch (Exception $e) {

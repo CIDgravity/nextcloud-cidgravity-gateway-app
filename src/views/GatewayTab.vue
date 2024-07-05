@@ -13,7 +13,8 @@
 		<!-- Error loading storage type -->
 		<NcEmptyContent v-else-if="isErrorLocal"
 			class="emptyContent"
-			:name="t('cidgravitygateway', 'Something wrong while loading metadata')">
+			:name="t('cidgravitygateway', 'Something wrong while loading metadata')"
+			:description="errorMessage">
 			<template #icon>
 				<AlertCircleOutlineIcon />
 			</template>
@@ -138,7 +139,8 @@ export default {
 			externalStorageConfiguration: {},
 			ipfsGateway: {},
 			isErrorLocal: this.isError,
-			isCidgravityStorageLocal: this.isCidgravityStorage
+			isErrorMessageLocal: null,
+			isCidgravityStorageLocal: this.isCidgravityStorage,
 		}
 	},
 
@@ -159,6 +161,9 @@ export default {
 
 			return this.t('cidgravitygateway', 'Not on an CIDgravity storage')
 		},
+		errorMessage() {
+			return this.isErrorMessageLocal
+		},
 		getMetadataSectionTitle() {
 			if (this.fileInfo.type === 'dir') {
 				return this.t('cidgravitygateway', 'Directory metadata')
@@ -176,22 +181,22 @@ export default {
 			return this.t('cidgravitygateway', 'This {contentType} is not on an CIDgravity storage type. To display metadata, you must browse files on external storage', { contentType })
 		},
 		shortenedCid() {
-			if (this.fileMetadata.cid !== null && this.fileMetadata.cid !== '' && this.fileMetadata.cid !== undefined) {
-				if (this.fileMetadata.cid.length > 15) {
+			if (this.fileMetadata.result.file.cid !== null && this.fileMetadata.result.file.cid !== '' && this.fileMetadata.result.file.cid !== undefined) {
+				if (this.fileMetadata.result.file.cid.length > 15) {
 					return (
-						this.fileMetadata.cid.substring(0, 5)
+						this.fileMetadata.result.file.cid.substring(0, 5)
 						+ ' [...] '
-						+ this.fileMetadata.cid.substring(this.fileMetadata.cid.length - 5, this.fileMetadata.cid.length)
+						+ this.fileMetadata.result.file.cid.substring(this.fileMetadata.result.file.cid.length - 5, this.fileMetadata.result.file.cid.length)
 					)
 				} else {
-					return this.fileMetadata.cid
+					return this.fileMetadata.result.file.cid
 				}
 			} else {
-				return this.fileMetadata.cid
+				return this.fileMetadata.result.file.cid
 			}
 		},
 		ipfsPublicLink() {
-			return this.ipfsGateway.link + '/' + this.fileMetadata.cid
+			return this.ipfsGateway.link + '/' + this.fileMetadata.result.file.cid
 		},
 		isCustomIpfsGateway() {
 			return this.ipfsGateway.isCustom
@@ -215,7 +220,7 @@ export default {
 		},
 		async copyCid() {
 			try {
-				await navigator.clipboard.writeText(this.fileMetadata.cid)
+				await navigator.clipboard.writeText(this.fileMetadata.result.file.cid)
 				showSuccess(t('cidgravitygateway', 'CID copied'))
 			} catch (error) {
 				showError(t('cidgravitygateway', 'Unable to copy the CID'))
@@ -224,7 +229,7 @@ export default {
 		},
 		async copyIpfsPublicLink() {
 			try {
-				const publicLink = this.ipfsGateway.link + '/' + this.fileMetadata.cid
+				const publicLink = this.ipfsGateway.link + '/' + this.fileMetadata.result.file.cid
 				await navigator.clipboard.writeText(publicLink)
 				showSuccess(t('cidgravitygateway', 'Public link copied'))
 			} catch (error) {
@@ -238,8 +243,9 @@ export default {
 		setIsCidgravityStorage(isCidgravityStorage) {
 			this.isCidgravityStorageLocal = isCidgravityStorage
 		},
-		setIsError(isError) {
+		setIsError(isError, errorMessage) {
 			this.isErrorLocal = isError
+			this.isErrorMessageLocal = errorMessage
 		},
 		setExternalStorageConfiguration(config) {
 			this.externalStorageConfiguration = config
@@ -270,16 +276,19 @@ export default {
 					this.isCidgravityStorageLocal = true
 					this.isErrorLocal = false
 					this.loading = false
+					this.isErrorMessageLocal = null
 				} else {
 					console.error('unable to load file metadata')
 					this.fileMetadata = {}
 					this.loading = false
 					this.isErrorLocal = true
+					this.isErrorMessageLocal = res.data.metadata.error
 				}
 			}).catch((error) => {
 				console.error(error)
 				this.loading = false
 				this.isErrorLocal = true
+				this.isErrorMessageLocal = null
 			})
 		},
 	},

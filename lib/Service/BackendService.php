@@ -38,16 +38,16 @@ class BackendService extends Backend {
 			->setText($l->t('CIDgravity'))
 			->addParameters([
 				new DefinitionParameter('host', $l->t('URL')),
-				new DefinitionParameter('metadata_endpoint', $l->t('Metadata endpoint')),
 				(new DefinitionParameter('root', $l->t('Remote subfolder')))
 					->setFlag(DefinitionParameter::FLAG_OPTIONAL),
 				(new DefinitionParameter('secure', $l->t('Secure https://')))
 					->setType(DefinitionParameter::VALUE_BOOLEAN)
 					->setDefaultValue(true),
+				new DefinitionParameter('metadata_endpoint', $l->t('Metadata endpoint')),
 				(new DefinitionParameter('default_ipfs_gateway', $l->t('Default IPFS gateway')))
-					->setType(DefinitionParameter::VALUE_TEXT)
-					->setDefaultValue('https://ipfs.io/ipfs')
-					->setTooltip('You can also use your custom gateway or public gateway such as https://dweb.link'),
+				->setType(DefinitionParameter::VALUE_TEXT)
+				->setDefaultValue('https://ipfs.io/ipfs')
+				->setTooltip('You can also use your custom gateway or public gateway such as https://dweb.link'),
 			])
 			->addAuthScheme(AuthMechanism::SCHEME_PASSWORD)
 			->setLegacyAuthMechanism($legacyAuth);
