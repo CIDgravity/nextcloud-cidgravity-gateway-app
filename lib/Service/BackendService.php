@@ -37,14 +37,14 @@ class BackendService extends Backend {
 			->setStorageClass('\OC\Files\Storage\DAV')
 			->setText($l->t('CIDgravity'))
 			->addParameters([
-				new DefinitionParameter('host', $l->t('URL')),
+				new DefinitionParameter('host', $l->t('CIDgravity gateway URL')),
 				(new DefinitionParameter('root', $l->t('Remote subfolder')))
 					->setFlag(DefinitionParameter::FLAG_OPTIONAL),
 				(new DefinitionParameter('secure', $l->t('Secure https://')))
 					->setType(DefinitionParameter::VALUE_BOOLEAN)
 					->setDefaultValue(true),
-				new DefinitionParameter('metadata_endpoint', $l->t('Metadata endpoint')),
-				(new DefinitionParameter('default_ipfs_gateway', $l->t('Default IPFS gateway')))
+				new DefinitionParameter('metadata_endpoint', $l->t('CIDgravity metadata URL')),
+				(new DefinitionParameter('default_ipfs_gateway', $l->t('Default IPFS gateway URL')))
 				->setType(DefinitionParameter::VALUE_TEXT)
 				->setDefaultValue('https://ipfs.io/ipfs')
 				->setTooltip('You can also use your custom gateway or public gateway such as https://dweb.link'),

@@ -13,7 +13,7 @@
 		<!-- Error loading storage type -->
 		<NcEmptyContent v-else-if="isErrorLocal"
 			class="emptyContent"
-			:name="t('cidgravitygateway', 'Something wrong while loading metadata')"
+			:name="t('cidgravitygateway', 'Something went wrong while loading metadata')"
 			:description="errorMessage">
 			<template #icon>
 				<AlertCircleOutlineIcon />
@@ -24,7 +24,7 @@
 		<div v-else>
 			<div class="ipfs-gateway-select">
 				<strong>
-					<h3>{{ t('cidgravitygateway', 'Choose an IPFS gateway to use for links') }}</h3>
+					<h3>{{ t('cidgravitygateway', 'Select an IPFS gateway') }}</h3>
 				</strong>
 
 				<NcSelect ref="select"
@@ -32,17 +32,9 @@
 					input-id="ipfs-gateway-input"
 					class="ipfs-gateway__input"
 					:loading="loading"
-					:placeholder="t('cidgravitygateway', 'Choose an IPFS gateway to use for links')"
+					:placeholder="t('cidgravitygateway', 'Select an IPFS gateway')"
 					:options="ipfsGatewayOptions"
 					@option:selected="onIpfsGatewaySelected" />
-			</div>
-
-			<div v-if="isCustomIpfsGateway" class="ipfs-custom-gateway-input">
-				<input v-model="ipfsGateway.link"
-					input-id="ipfs-custom-gateway-input"
-					:placeholder="t('cidgravitygateway', 'Type your custom IPFS gateway link, ending with /ipfs')"
-					type="text"
-					style="width: 100%; margin-top: 10px; margin-bottom: 10px;">
 			</div>
 
 			<ul v-if="!loading" style="margin-top: 30px;">
@@ -53,14 +45,14 @@
 				<TabLinkEntrySimple ref="ipfsPublicLinkEntry"
 					class="menu-entry__internal"
 					:title="t('cidgravitygateway', 'IPFS public link')"
-					:subtitle="t('cidgravitygateway', 'Click to open the IPFS link')"
+					:subtitle="t('cidgravitygateway', 'Click to open')"
 					:link="ipfsPublicLink">
 					<template #avatar>
 						<div class="entry-icon-primary icon-public-white" />
 					</template>
 
-					<NcActionButton :title="t('cidgravitygateway', 'Copy public link')"
-						:aria-label="t('cidgravitygateway', 'Copy public link')"
+					<NcActionButton :title="t('cidgravitygateway', 'Copy link')"
+						:aria-label="t('cidgravitygateway', 'Copy link')"
 						@click="copyIpfsPublicLink">
 						<template #icon>
 							<ClipboardIcon :size="20" />
@@ -128,10 +120,9 @@ export default {
 		return {
 			loading: true,
 			ipfsGatewayOptions: [
-				{ id: 'gateway.pinata.cloud', label: 'gateway.pinata.cloud', link: 'https://gateway.pinata.cloud/ipfs', isCustom: false },
-				{ id: 'ipfs.io', label: 'ipfs.io', link: 'https://ipfs.io/ipfs', isCustom: false },
-				{ id: 'dweb.link', label: 'dweb.link', link: 'https://dweb.link/ipfs', isCustom: false },
-				{ id: 'Custom gateway', label: 'Custom gateway', link: null, isCustom: true },
+				{ id: 'gateway.pinata.cloud', label: 'gateway.pinata.cloud', link: 'https://gateway.pinata.cloud/ipfs' },
+				{ id: 'ipfs.io', label: 'ipfs.io', link: 'https://ipfs.io/ipfs' },
+				{ id: 'dweb.link', label: 'dweb.link', link: 'https://dweb.link/ipfs' },
 			],
 			selectedOption: null,
 			fileInfo: {},
@@ -155,11 +146,7 @@ export default {
 			return this.$parent.activeTab
 		},
 		emptyContentTitle() {
-			if (this.fileInfo && this.fileInfo.mountType === 'external') {
-				return this.t('cidgravitygateway', 'Not on an external storage')
-			}
-
-			return this.t('cidgravitygateway', 'Not on an CIDgravity storage')
+			return this.t('cidgravitygateway', 'Not metadata available')
 		},
 		errorMessage() {
 			return this.isErrorMessageLocal
@@ -173,12 +160,7 @@ export default {
 		},
 		emptyContentDescription() {
 			const contentType = this.fileInfo.type === 'dir' ? 'directory' : 'file'
-
-			if (this.fileInfo && this.fileInfo.mountType === 'external') {
-				return this.t('cidgravitygateway', 'This {contentType} is not on an external storage. To display metadata, you must browse files on external storage', { contentType })
-			}
-
-			return this.t('cidgravitygateway', 'This {contentType} is not on an CIDgravity storage type. To display metadata, you must browse files on external storage', { contentType })
+			return this.t('cidgravitygateway', 'This {contentType} is not located on a CIDgravity external storage.', { contentType })
 		},
 		shortenedCid() {
 			if (this.fileMetadata.result.file.cid !== null && this.fileMetadata.result.file.cid !== '' && this.fileMetadata.result.file.cid !== undefined) {
@@ -251,20 +233,13 @@ export default {
 			this.externalStorageConfiguration = config
 			this.isCidgravityStorageLocal = true
 
-			// parse default ipfs gateway to get hostname only
-			// if not in options, set to custom value
+			// only list of gateway, not custom value here
 			const parsedUrl = new URL(this.externalStorageConfiguration.default_ipfs_gateway)
 
 			if (this.ipfsGatewayOptions.some(e => e.link === this.externalStorageConfiguration.default_ipfs_gateway)) {
 				this.ipfsGateway = {
 					id: parsedUrl.hostname,
 					label: parsedUrl.hostname,
-					link: this.externalStorageConfiguration.default_ipfs_gateway,
-				}
-			} else {
-				this.ipfsGateway = {
-					id: 'Custom gateway',
-					label: 'Custom gateway',
 					link: this.externalStorageConfiguration.default_ipfs_gateway,
 				}
 			}
@@ -325,17 +300,6 @@ export default {
 	label[for="ipfs-gateway-input"] {
 		margin-bottom: 2px;
 	}
-
-	&__input {
-		width: 100%;
-		margin: 10px 0;
-	}
-}
-
-.ipfs-custom-gateway-input {
-	display: flex;
-	flex-direction: column;
-	margin-bottom: 10px;
 
 	&__input {
 		width: 100%;
