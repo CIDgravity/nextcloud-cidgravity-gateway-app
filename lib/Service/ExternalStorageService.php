@@ -142,12 +142,7 @@ class ExternalStorageService {
         // if the mountpoint is not empty, prepend a slash
         $mountpoint = trim($resolvedMountpoint, '/');
         $filename = ltrim($fileInternalPath, '/');
-        
-        if ($mountpoint !== '') {
-            $configuration['filepath'] = '/' . $mountpoint . '/' . $filename;
-        } else {
-            $configuration['filepath'] = '/' . $filename;
-        }
+        $configuration['filepath'] = $mountpoint !== '' ? ($filename !== '' ? "/$mountpoint/$filename" : "/$mountpoint") : "/$filename";
 
         // check if we need to include auth settings (for metadata call only, not exposed to frontend)
         if ($includeAuthSettings) {
