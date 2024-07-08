@@ -213,7 +213,7 @@ export default {
 			try {
 				const publicLink = this.ipfsGateway.link + '/' + this.fileMetadata.result.file.cid
 				await navigator.clipboard.writeText(publicLink)
-				showSuccess(t('cidgravitygateway', 'Public link copied'))
+				showSuccess(t('cidgravitygateway', 'Public link copied link copied'))
 			} catch (error) {
 				showError(t('cidgravitygateway', 'Unable to copy the public link'))
 				console.error(error)
@@ -240,6 +240,12 @@ export default {
 				this.ipfsGateway = {
 					id: parsedUrl.hostname,
 					label: parsedUrl.hostname,
+					link: this.externalStorageConfiguration.default_ipfs_gateway,
+				}
+			} else {
+				this.ipfsGateway = {
+					id: 'custom',
+					label: t('cidgravitygateway', 'Custom gateway'),
 					link: this.externalStorageConfiguration.default_ipfs_gateway,
 				}
 			}
