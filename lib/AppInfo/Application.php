@@ -10,6 +10,9 @@ use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 use OCA\CidgravityGateway\Event\Listener\LoadAdditionalScriptsListener;
 use OCA\CidgravityGateway\Event\Listener\ExternalStoragesRegistrationListener;
+use OCA\CidgravityGateway\Event\Listener\UserCreatedListener;
+
+use OCP\User\Events\UserCreatedEvent;
 
 class Application extends App implements IBootstrap {
 	public const APP_ID = 'cidgravitygateway';
@@ -21,6 +24,7 @@ class Application extends App implements IBootstrap {
     public function register(IRegistrationContext $context): void {
 		$context->registerEventListener('OCA\\Files_External::loadAdditionalBackends', ExternalStoragesRegistrationListener::class);
         $context->registerEventListener(LoadAdditionalScriptsEvent::class, LoadAdditionalScriptsListener::class);
+        $context->registerEventListener(UserCreatedEvent::class, UserCreatedListener::class);
     }
 
     public function boot(IBootContext $context): void {
