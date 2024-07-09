@@ -48,6 +48,10 @@ class BackendService extends Backend {
 				->setType(DefinitionParameter::VALUE_TEXT)
 				->setDefaultValue('https://ipfs.io/ipfs')
 				->setTooltip('You can also use your custom gateway or public gateway such as https://dweb.link'),
+				(new DefinitionParameter('auto_create_user_folder', $l->t('Auto create user folder')))
+				->setType(DefinitionParameter::VALUE_BOOLEAN)
+				->setDefaultValue(false)
+				->setTooltip('Auto create on folder on this external storage when a new user is created'),
 			])
 			->addAuthScheme(AuthMechanism::SCHEME_PASSWORD)
 			->setLegacyAuthMechanism($legacyAuth);

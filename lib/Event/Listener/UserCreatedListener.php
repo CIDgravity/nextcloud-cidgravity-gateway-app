@@ -48,36 +48,33 @@ class UserCreatedListener implements IEventListener
             return;
         }
 
-        // get "Public Filecoin" external storage from config ID
-        // do this only if public gateway enabled
-        if ($this->config->getSystemValue('cidgravity_gateway')['is_public_gateway_enabled']) {
-            $externalStorageID = $this->config->getSystemValue('cidgravity_gateway')['public_external_storage_id'];
-            $externalStorage = $this->globalStoragesService->getStorage($externalStorageID);
+        // iterate over all external storages
+        // if config for external storage autoCreateUserFolder is true, create user folder on it
+        $externalStorages = $this->globalStoragesService->getStorages();
 
+        foreach ($externalStorages as $externalStorage) {
             if ($externalStorage->getBackend()->getIdentifier() != "cidgravity") {
                 $this->logger->error("CIDgravity: unable to create user folder on provided external storage: not an cidgravity external storage");
                 return;
             }
 
-            // get associated user and create the folder
-            $userUID = $event->getUser()->getUID();
-            $externalStorageMountpoint = $externalStorage->getMountPoint();
-            $userFolder = $this->rootFolder->getUserFolder($userUID);
-            $webDavPath = "/{$externalStorageMountpoint}/{$userUID}";
+            if ($externalStorage->getBackendOption('auto_create_user_folder')) {
+                $userUID = $event->getUser()->getUID();
+                $externalStorageMountpoint = $externalStorage->getMountPoint();
+                $userFolder = $this->rootFolder->getUserFolder($userUID);
+                $webDavPath = "/{$externalStorageMountpoint}/{$userUID}";
 
-            try {
-                if (!$userFolder->nodeExists($webDavPath)) {
-                    $userFolder->newFolder($webDavPath);
-                    $this->logger->debug("CIDgravity: User folder successfully created on provided external storage");
-                } else {
-                    $this->logger->debug("CIDgravity: unable to create user folder on provided external storage: already exists");
-                }
-            } catch (\Exception $e) {
-                $this->logger->error("CIDgravity: unable to create user folder on provided external storage: " . $e->getMessage());
+                try {
+                    if (!$userFolder->nodeExists($webDavPath)) {
+                        $userFolder->newFolder($webDavPath);
+                        $this->logger->debug("CIDgravity: User folder successfully created on provided external storage");
+                    } else {
+                        $this->logger->debug("CIDgravity: unable to create user folder on provided external storage: already exists");
+                    }
+                } catch (\Exception $e) {
+                    $this->logger->error("CIDgravity: unable to create user folder on provided external storage: " . $e->getMessage());
+                }   
             }
-            
-        } else {
-            $this->logger->debug("CIDgravity: public gateway not enabled, will not try to create user folder on external storage");
         }
     }
 }
