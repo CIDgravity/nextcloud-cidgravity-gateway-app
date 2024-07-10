@@ -67,7 +67,13 @@ class UserCreatedListener implements IEventListener
                 $resolvedMountpoint = str_replace('$user', $event->getUser()->getUID(), $externalStorage->getBackendOption('root'));
                     
                 // define configuration to connect to webdav using CURL
-                $webDavPath = "{$externalStorage->getBackendOption('host')}/{$resolvedMountpoint}";
+                // check if there is a trailing slash after host, if not add one
+                $host = $externalStorage->getBackendOption('host');
+                $webDavPath = "{$host}/{$resolvedMountpoint}";
+
+                if (substr($host, -1) === '/') {
+                    $webDavPath = "{$host}{$resolvedMountpoint}";
+                }
 
                 // check folder not already exists using PROPFIND in curl
                 $folderExists = $this->sendCurlRequestToWebdav($externalStorage, $webDavPath, 'PROPFIND');
