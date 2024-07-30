@@ -30,13 +30,14 @@ use Psr\Log\LoggerInterface;
 use OCP\IConfig;
 use OCP\User\Events\UserCreatedEvent;
 use OCA\Files_External\Service\GlobalStoragesService;
-use OCP\Files\IRootFolder;
 
-use OCA\Files_External\Lib\StorageConfig;
+use OC\Files\Storage\DAV;
+use OC\Files\Storage\StorageFactory;
+use OC\Files\Mount\Manager;
 
 class UserCreatedListener implements IEventListener
 {
-    public function __construct(private LoggerInterface $logger, private IConfig $config, private GlobalStoragesService $globalStoragesService, private IRootFolder $rootFolder) {}
+    public function __construct(private LoggerInterface $logger, private IConfig $config, private GlobalStoragesService $globalStoragesService, private Manager $mountManager, private StorageFactory $storageFactory) {}
 
     /**
 	 * Handle UserCreatedEvent to create user folder on Public Filecoin webdav
@@ -52,6 +53,7 @@ class UserCreatedListener implements IEventListener
 
         // iterate over all external storages
         // if config for external storage autoCreateUserFolder is true, create user folder on it
+        // by using directly the built-in functions, the cache table will be updated in nextcloud
         $externalStorages = $this->globalStoragesService->getStorages();
 
         foreach ($externalStorages as $externalStorage) {
@@ -59,83 +61,44 @@ class UserCreatedListener implements IEventListener
                 continue;
             }
 
-            if ($externalStorage->getBackendOption('auto_create_user_folder')) {
+            if (!$externalStorage->getBackendOption('auto_create_user_folder')) {
+                continue;
+            }
 
-                // here to resolve, we need to replace $user by userID
-                // we can't use userConfigHandler, because it works with userSession = current loggedin user
-                // here we want the created user, not the user current loggedin (due to event listener)
-                $resolvedMountpoint = str_replace('$user', $event->getUser()->getUID(), $externalStorage->getBackendOption('root'));
-                    
-                // define configuration to connect to webdav using CURL
-                $host = $externalStorage->getBackendOption('host');
-                $webDavPath = "{$host}{$resolvedMountpoint}";
+            // get the mount point instance for the current external storage
+            // also get the storage type "DAV" here
+            $mountPointInstance = $this->mountManager->find($externalStorage->getMountPoint());
+            $storageClass = $externalStorage->getBackend()->getStorageClass();
 
-                // check folder not already exists using PROPFIND in curl
-                $folderExists = $this->sendCurlRequestToWebdav($externalStorage, $webDavPath, 'PROPFIND');
+            // fefore using storage backend options, we need to resolve the remote subfolder if contains $user
+            $storageArguments = $externalStorage->getBackendOptions();
+            $resolvedMountpoint = str_replace('$user', $event->getUser()->getUID(), $externalStorage->getBackendOption('root'));
+            $storageArguments['root'] = $resolvedMountpoint;
 
-                if ($folderExists['errorMessage'] != null) {
-                    $this->logger->error("CIDgravity: unable to check if folder already exist on webdav server. Check full log for details", [
-                        "errorMessage" => $folderExists['errorMessage'],
-                        "httpStatusCode" => $folderExists['httpCode'],
-                    ]);
-                    
-                    return;
-                }
+            // get storage instance of type DAV to use mkdir and other functions
+            $storage = $this->storageFactory->getInstance($mountPointInstance, $storageClass, $storageArguments);
 
-                // if not exists (404 status code from previous request), create folder on webdav
-                if ($folderExists['httpCode'] == 404) {
-                    $createFolder = $this->sendCurlRequestToWebdav($externalStorage, $webDavPath, 'MKCOL');
+            // always use "/" here, because the $storage is already in the folder for $user
+            // and we want to create the root folder
+            if ($storage instanceof DAV) {
+                try {
+                    $fileExists = $storage->file_exists("/");
 
-                    if ($createFolder['errorMessage'] != null) {
-                        $this->logger->error("CIDgravity: unable to create folder on webdav external storage. Check full log for details", [
-                            "errorMessage" => $createFolder['errorMessage'],
-                            "httpStatusCode" => $createFolder['httpCode'],
-                        ]);
-                        
-                        return;
+                    if (!$fileExists) {
+                        $createFolder = $storage->mkdir("/");
+
+                        if (!$createFolder) {
+                            $this->logger->error("CIDgravity: error while creating the folder for the new user", [
+                                "exception" => $e->getMessage(),
+                            ]);
+                        }
                     }
-
-                    $this->logger->debug("CIDgravity: user folder on external storage successfully created", [
-                        "webDavPath" => $webDavPath
-                    ]);
-
-                } else {
-                    $this->logger->debug("CIDgravity: user folder already exists on webdav external storage, not created", [
-                        "webDavPath" => $webDavPath
+                } catch (\Exception $e) {
+                    $this->logger->error("CIDgravity: unable to check if folder exists or to create folder", [
+                        "exception" => $e->getMessage(),
                     ]);
                 }
             }
         }
-    }
-
-    public function sendCurlRequestToWebdav(StorageConfig $externalStorage, string $hostWithFolderPath, string $requestType) {
-        $ch = curl_init();
-
-        // define curl session opts
-        curl_setopt($ch, CURLOPT_URL, $hostWithFolderPath);
-        curl_setopt($ch, CURLOPT_USERPWD, "{$externalStorage->getBackendOption('user')}:{$externalStorage->getBackendOption('password')}");
-        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $requestType);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, [
-            'Content-Type: application/xml',
-        ]);
-
-        // execute request
-        curl_exec($ch);
-
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $errorMessage = '';
-
-        if (curl_errno($ch)) {
-            $errorMessage = 'cURL Error: ' . curl_error($ch);
-        } else {
-            if ($httpCode == 405) {
-                $errorMessage = "request type $requestType not supported";
-            }
-        }
-
-        // close session and return
-        curl_close($ch);
-        return ['httpCode' => $httpCode, 'errorMessage' => $errorMessage];
     }
 }
