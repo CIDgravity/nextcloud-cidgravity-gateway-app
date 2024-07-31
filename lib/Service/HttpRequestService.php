@@ -25,16 +25,17 @@ namespace OCA\CidgravityGateway\Service;
 
 use Exception;
 use Psr\Log\LoggerInterface;
+use OCP\ICertificateManager;
 
 class HttpRequestService {
 
     private $ch;
 
-	public function __construct(private LoggerInterface $logger) {
+	public function __construct(private LoggerInterface $logger, private ICertificateManager $certificateManager) {
         $this->ch = curl_init();
     }
 
-    public function post($url, $data, $username = null, $password = null) {
+    public function post($url, $data, $useSsl, $username = null, $password = null) {
         $jsonData = json_encode($data);
 
         // set CURL configuration
@@ -42,6 +43,14 @@ class HttpRequestService {
         curl_setopt($this->ch, CURLOPT_POST, true);
         curl_setopt($this->ch, CURLOPT_POSTFIELDS, $jsonData);
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
+
+        // if useSsl is true, we need to add a config to CURL for certificate
+        if ($useSsl) {
+			$certPath = $this->certificateManager->getAbsoluteBundlePath();
+			if (file_exists($certPath)) {
+                curl_setopt($this->ch, CURLOPT_CAINFO, $certPath);
+			}
+		}
 
         // configure request headers
         $headers = ['Content-Type: application/json'];

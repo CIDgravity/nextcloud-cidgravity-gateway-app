@@ -69,6 +69,7 @@ class ExternalStorageService {
                 $response = $this->httpClient->post(
                     $externalStorageConfiguration['metadata_endpoint'], 
                     $requestBody,
+                    $externalStorageConfiguration['ssl_enabled'],
                     $externalStorageConfiguration['user'],
                     $externalStorageConfiguration['password'],
                 );
@@ -134,6 +135,7 @@ class ExternalStorageService {
         $configuration['mountpoint'] = $externalStorage->getMountPoint();
         $configuration['metadata_endpoint'] = $externalStorage->getBackendOption('metadata_endpoint');
         $configuration['default_ipfs_gateway'] = $externalStorage->getBackendOption('default_ipfs_gateway');
+        $configuration['ssl_enabled'] = $externalStorage->getBackendOption('secure');
         
         // resolve the remote subfolder config (if it contains $user, will be automatically replaced by userID)
         // this will help when sending metadata request to API endpoint
