@@ -1,5 +1,3 @@
-[![Build](https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app/actions/workflows/build-and-release.yml)
-
 # CIDgravity gateway
 
 This Nextcloud app allows to retrieve files and folder metadata on decentralized web using CIDgravity gateway services.
