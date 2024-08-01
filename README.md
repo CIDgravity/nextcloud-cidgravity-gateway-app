@@ -1,4 +1,4 @@
-[![AGPL-3.0](https://img.shields.io/github/license/CIDgravity/nextcloud-cidgravity-gateway-app.svg)](https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app/blob/master/LICENSE)
+[![Build](https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app/actions/workflows/build-and-release.yml/badge.svg)](https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app/actions/workflows/build-and-release.yml)
 
 # CIDgravity gateway
 
