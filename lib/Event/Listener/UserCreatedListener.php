@@ -90,6 +90,11 @@ class UserCreatedListener implements IEventListener
 
             // always use "/" here, because the $storage is already in the folder for $user
             // and we want to create the root folder
+            $this->logger->debug("CIDgravity - UserCreatedEvent: check type of external storage", [
+                "storage" => json_encode($storage),
+                "type" => get_class($storage),
+            ]);
+
             if ($storage instanceof DAV) {
                 try {
                     $fileExists = $storage->file_exists("/");
