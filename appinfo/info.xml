@@ -1,11 +1,10 @@
 <?xml version="1.0"?>
-<info xmlns:xsi= "http://www.w3.org/2001/XMLSchema-instance"
-      xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
+<info xmlns:xsi= "http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://apps.nextcloud.com/schema/apps/info.xsd">
 	<id>cidgravitygateway</id>
 	<name>CidgravityGateway</name>
 	<summary>An application to display files/directory metadata on decentralized web for CIDgravity storage files</summary>
 	<description>An application to display files/directory metadata on decentralized web for CIDgravity storage files</description>
-	<version>1.0.0</version>
+	<version>1.1.2</version>
 	<licence>agpl</licence>
 	<author homepage="https://cidgravity.com">CIDgravity</author>
 	<author>CIDgravity</author>
