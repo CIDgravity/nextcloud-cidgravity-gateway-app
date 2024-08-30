@@ -44,10 +44,10 @@ class UserCreatedListener implements IEventListener
 	*/
     public function handle(Event $event): void
     {
-        $this->logger->debug("CIDgravity: will create the user folder on provided external storage");
+        $this->logger->debug("CIDgravity - UserCreatedEvent: will create the user folder on provided external storage");
 
         if (!($event instanceof UserCreatedEvent)) {
-            $this->logger->warning("CIDgravity: invalid event to create user folder on provided external storage");
+            $this->logger->warning("CIDgravity - UserCreatedEvent: invalid event to create user folder on provided external storage");
             return;
         }
 
@@ -58,10 +58,20 @@ class UserCreatedListener implements IEventListener
 
         foreach ($externalStorages as $externalStorage) {
             if ($externalStorage->getBackend()->getIdentifier() != "cidgravity") {
+                $this->logger->debug("CIDgravity - UserCreatedEvent: external storage not of type cidgravity", [
+                    "externalStorage" => json_encode($externalStorage),
+                    "user" => json_encode($event->getUser())
+                ]);
+
                 continue;
             }
 
             if (!$externalStorage->getBackendOption('auto_create_user_folder')) {
+                $this->logger->debug("CIDgravity - UserCreatedEvent: auto create user folder disabled for this external storage", [
+                    "externalStorage" => json_encode($externalStorage),
+                    "user" => json_encode($event->getUser())
+                ]);
+
                 continue;
             }
 
@@ -84,20 +94,54 @@ class UserCreatedListener implements IEventListener
                 try {
                     $fileExists = $storage->file_exists("/");
 
+                    $this->logger->debug("CIDgravity - UserCreatedEvent: check if user folder already exists", [
+                        "fileExists" => json_encode($fileExists),
+                        "externalStorage" => json_encode($externalStorage),
+                        "user" => json_encode($event->getUser())
+                    ]);
+
                     if (!$fileExists) {
                         $createFolder = $storage->mkdir("/");
 
+                        $this->logger->debug("CIDgravity - UserCreatedEvent: create user folder", [
+                            "createFolder" => json_encode($createFolder),
+                            "externalStorage" => json_encode($externalStorage),
+                            "user" => json_encode($event->getUser())
+                        ]);
+
                         if (!$createFolder) {
-                            $this->logger->error("CIDgravity: error while creating the folder for the new user", [
+                            $this->logger->error("CIDgravity - UserCreatedEvent: error while creating the folder for the new user", [
                                 "exception" => $e->getMessage(),
+                                "externalStorage" => json_encode($externalStorage),
+                                "user" => json_encode($event->getUser())
+                            ]);
+
+                        } else {
+                            $this->logger->debug("CIDgravity - UserCreatedEvent: user folder successfully created on external storage", [
+                                "externalStorage" => json_encode($externalStorage),
+                                "user" => json_encode($event->getUser())
                             ]);
                         }
+
+                    } else {
+                        $this->logger->debug("CIDgravity - UserCreatedEvent: user folder already exists on external storage", [
+                            "externalStorage" => json_encode($externalStorage),
+                            "user" => json_encode($event->getUser())
+                        ]);
                     }
                 } catch (\Exception $e) {
-                    $this->logger->error("CIDgravity: unable to check if folder exists or to create folder", [
+                    $this->logger->error("CIDgravity - UserCreatedEvent: unable to check if folder exists or to create folder", [
                         "exception" => $e->getMessage(),
+                        "externalStorage" => json_encode($externalStorage),
+                        "user" => json_encode($event->getUser())
                     ]);
                 }
+
+            } else {
+                $this->logger->debug("CIDgravity - UserCreatedEvent: external storage not of type DAV", [
+                    "externalStorage" => json_encode($externalStorage),
+                    "user" => json_encode($event->getUser())
+                ]);
             }
         }
     }
