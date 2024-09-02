@@ -39,9 +39,7 @@ class UserCreatedListener implements IEventListener
 {
     public function __construct(private LoggerInterface $logger, private IConfig $config, private GlobalStoragesService $globalStoragesService, private Manager $mountManager, private StorageFactory $storageFactory) {}
 
-    /**
-	 * Handle UserCreatedEvent to create user folder on Public Filecoin webdav
-	*/
+    // Handle UserCreatedEvent to create user folder on Public Filecoin webdav
     public function handle(Event $event): void
     {
         if (!($event instanceof UserCreatedEvent)) {
