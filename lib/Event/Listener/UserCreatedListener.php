@@ -44,12 +44,14 @@ class UserCreatedListener implements IEventListener
 	*/
     public function handle(Event $event): void
     {
-        $this->logger->debug("CIDgravity - UserCreatedEvent: will create the user folder on provided external storage");
-
         if (!($event instanceof UserCreatedEvent)) {
             $this->logger->warning("CIDgravity - UserCreatedEvent: invalid event to create user folder on provided external storage");
             return;
         }
+
+        $this->logger->info("CIDgravity - UserCreatedEvent: will create the user folder on provided external storage",[
+            "user" => json_encode($event->getUser())
+        ]);
 
         // iterate over all external storages
         // if config for external storage autoCreateUserFolder is true, create user folder on it
@@ -95,7 +97,9 @@ class UserCreatedListener implements IEventListener
                 "type" => get_class($storage),
             ]);
 
-            if ($storage instanceof DAV) {
+            // use instanceOfStorage function instead of php instanceof (not working with instanceof)
+            // because instanceOfStorage can also detect the storage wrapper
+            if ($storage->instanceOfStorage("OC\Files\Storage\DAV")) {
                 try {
                     $fileExists = $storage->file_exists("/");
 
@@ -129,11 +133,12 @@ class UserCreatedListener implements IEventListener
                         }
 
                     } else {
-                        $this->logger->debug("CIDgravity - UserCreatedEvent: user folder already exists on external storage", [
+                        $this->logger->info("CIDgravity - UserCreatedEvent: user folder already exists on external storage", [
                             "externalStorage" => json_encode($externalStorage),
                             "user" => json_encode($event->getUser())
                         ]);
                     }
+                    
                 } catch (\Exception $e) {
                     $this->logger->error("CIDgravity - UserCreatedEvent: unable to check if folder exists or to create folder", [
                         "exception" => $e->getMessage(),
