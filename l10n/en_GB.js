@@ -3,8 +3,8 @@ OC.L10N.register(
     {
         "CIDgravity": "CIDgravity",
         "Select an IPFS gateway": "Select an IPFS gateway",
-        "Directory metadata": "Directory metadata",
-        "File metadata": "File metadata",
+        "Directory details": "Directory details",
+        "File details": "File details",
         "Something went wrong while loading metadata": "Something went wrong while loading metadata",
         "Click to open": "Click to open",
         "IPFS public link": "IPFS public link",
@@ -16,6 +16,19 @@ OC.L10N.register(
         "CID copied": "CID copied",
         "Unable to copy the CID": "Unable to copy the CID",
         "Public link copied": "Public link copied",
-        "Unable to copy the public link": "Unable to copy the public link"
+        "Unable to copy the public link": "Unable to copy the public link",
+        "retrievable copies": "retrievable copies",
+        "retrievable copy": "retrievable copy",
+        "All groups are offloaded, and the file is fully stored": "All groups are offloaded, and the file is fully stored",
+        "All groups have at least one active deal": "All groups have at least one active deal",
+        "All groups are ready, and the file is being offloaded to Filecoin": "All groups are ready, and the file is being offloaded to Filecoin",
+        "At least one group is not yet fully ready": "At least one group is not yet fully ready",
+        "Status": "Status",
+        "Minimum number of retrievable copies across all groups": "Minimum number of retrievable copies across all groups",
+        "Staging": "Staging",
+        "Offloading": "Offloading",
+        "Partially offloaded": "Partially offloaded",
+        "Offloaded": "Offloaded",
+        "Unknown": "Unknown"
     },
 "nplurals=2; plural=(n != 1);");
