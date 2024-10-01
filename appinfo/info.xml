@@ -10,6 +10,12 @@
 	<author>CIDgravity</author>
 	<namespace>CidgravityGateway</namespace>
 	<category>tools</category>
+	<documentation>
+        <admin>https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app</admin>
+    </documentation>
+	<bugs>https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app</bugs>
+    <website>https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app</website>
+	<repository type="git">https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app</repository>
 	<dependencies>
 		<nextcloud min-version="29" max-version="29" />
 	</dependencies>
