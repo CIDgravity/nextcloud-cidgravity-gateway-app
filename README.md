@@ -15,8 +15,8 @@ Access a new tab for file details to view additional information about the file 
 ~~Just install it from your Nextcloud application catalogue.~~ Not available (yet)
 
 ### Manual installation (from releases)
-* Download the latest version from the [release page](https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app/releases).
-* Extract the archive to your Nextcloud's app folder, e.g. `tar xvf cidgravity-gateway-x.x.x.tar.gz -C /path/to/nextcloud/apps`
+* Download the latest version from the [release page](https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app/releases/latest).
+* Extract the archive to your Nextcloud's app folder, e.g. `unzip cidgravitygateway-vx.x.x.zip -C /path/to/nextcloud/apps`
 * Enable the app in the Apps section of your Nextcloud.
 
 ### Manual installation (from repository)
@@ -24,7 +24,7 @@ Access a new tab for file details to view additional information about the file 
 
 ```
 cd /path/to/nextcloud/apps/
-git clone https://github.com/CIDgravity nextcloud-cidgravity-gateway-app.git
+git clone https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app.git
 cd nextcloud-cidgravity-gateway-app/
 make composer
 make npm-init
