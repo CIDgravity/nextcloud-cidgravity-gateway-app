@@ -33,7 +33,9 @@
 					:title="t('cidgravitygateway', 'CID')"
 					:subtitle="shortenedCid">
 					<template #avatar>
-						<NcIconSvgWrapper inline :path="mdiIdentifier" />
+						<div class="entry-icon-primary">
+							<NcIconSvgWrapper inline :path="mdiPound" />
+						</div>
 					</template>
 
 					<NcActionButton :title="t('cidgravitygateway', 'Copy CID')"
@@ -51,7 +53,9 @@
 					:title="fileStatusTitle"
 					:subtitle="fileStatusDescription">
 					<template #avatar>
-						<NcIconSvgWrapper inline :path="mdiListStatus" />
+						<div class="entry-icon-primary">
+							<NcIconSvgWrapper inline :path="mdiCloudUpload" />
+						</div>
 					</template>
 				</TabLinkEntrySimple>
 
@@ -61,7 +65,9 @@
 					:title="fileRetrievableCopiesTitle"
 					:subtitle="t('cidgravitygateway', 'Number of copies that can be retrieved from Filecoin.')">
 					<template #avatar>
-						<NcIconSvgWrapper inline :path="mdiCounter" />
+						<div class="entry-icon-primary">
+							<NcIconSvgWrapper inline :path="mdiFileDownloadOutline" />
+						</div>
 					</template>
 				</TabLinkEntrySimple>
 
@@ -78,7 +84,9 @@
 						:link="ipfsPublicLink"
 						:has-copy-btn="true">
 						<template #avatar>
-							<NcIconSvgWrapper inline :path="mdiLink" />
+							<div class="entry-icon-primary">
+								<NcIconSvgWrapper inline :path="mdiLink" />
+							</div>
 						</template>
 
 						<NcActionButton :close-after-click="true" @click="copyIpfsPublicLink">
@@ -132,7 +140,7 @@ import axios from 'axios'
 import { generateOcsUrl } from '@nextcloud/router'
 import { showSuccess, showError } from '@nextcloud/dialogs'
 
-import { mdiLink, mdiListStatus, mdiCounter, mdiContentCopy, mdiIdentifier } from '@mdi/js'
+import { mdiLink, mdiCloudUpload, mdiFileDownloadOutline, mdiContentCopy, mdiPound } from '@mdi/js'
 
 export default {
 	name: 'GatewayTab',
@@ -163,10 +171,10 @@ export default {
 	setup() {
 		return {
 			mdiLink,
-			mdiListStatus,
-			mdiCounter,
+			mdiCloudUpload,
+			mdiFileDownloadOutline,
 			mdiContentCopy,
-			mdiIdentifier,
+			mdiPound,
 		}
 	},
 
@@ -416,6 +424,10 @@ export default {
 		background-color: var(--color-primary-element);
 		border-radius: 50%;
 		flex-shrink: 0;
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.icon-checkmark-color {
