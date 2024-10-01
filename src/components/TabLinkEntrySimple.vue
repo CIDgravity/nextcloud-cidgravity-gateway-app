@@ -30,6 +30,7 @@
 					{{ subtitle }}
 				</p>
 			</div>
+
 			<NcActions v-if="$slots['default']"
 				ref="actionsComponent"
 				class="sharing-entry__actions"

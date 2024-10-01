@@ -1,6 +1,5 @@
 <template>
 	<div class="tabContent" :class="{ 'icon-loading': loading }">
-
 		<!-- Not a CIDgravity storage, nothing to display -->
 		<NcEmptyContent v-if="!isCidgravityStorageLocal"
 			class="emptyContent"
@@ -23,44 +22,10 @@
 
 		<!-- CIDgravity storage: display all metadata -->
 		<div v-else>
-			<div class="ipfs-gateway-select">
-				<strong>
-					<h3>{{ t('cidgravitygateway', 'Select an IPFS gateway') }}</h3>
-				</strong>
-
-				<NcSelect ref="select"
-					v-model="ipfsGateway"
-					input-id="ipfs-gateway-input"
-					class="ipfs-gateway__input"
-					:loading="loading"
-					:placeholder="t('cidgravitygateway', 'Select an IPFS gateway')"
-					:options="ipfsGatewayOptions"
-					@option:selected="onIpfsGatewaySelected" />
-			</div>
-
 			<ul v-if="!loading" style="margin-top: 30px;">
 				<strong>
 					<h3>{{ getMetadataSectionTitle }}</h3>
 				</strong>
-
-				<!-- Display IPFS public link -->
-				<TabLinkEntrySimple ref="ipfsPublicLinkEntry"
-					class="menu-entry__internal"
-					:title="t('cidgravitygateway', 'IPFS public link')"
-					:subtitle="t('cidgravitygateway', 'Click to open')"
-					:link="ipfsPublicLink">
-					<template #avatar>
-						<NcIconSvgWrapper inline :path="mdiLink" />
-					</template>
-
-					<NcActionButton :title="t('cidgravitygateway', 'Copy link')"
-						:aria-label="t('cidgravitygateway', 'Copy link')"
-						@click="copyIpfsPublicLink">
-						<template #icon>
-							<NcIconSvgWrapper inline :path="mdiContentCopy" />
-						</template>
-					</NcActionButton>
-				</TabLinkEntrySimple>
 
 				<!-- Display file CID -->
 				<TabLinkEntrySimple ref="cidEntry"
@@ -94,23 +59,73 @@
 				<TabLinkEntrySimple ref="cidEntry"
 					class="menu-entry__internal"
 					:title="fileRetrievableCopiesTitle"
-					:subtitle="t('cidgravitygateway', 'Minimum number of retrievable copies across all groups')">
+					:subtitle="t('cidgravitygateway', 'Minimum number of retrievable copies')">
 					<template #avatar>
 						<NcIconSvgWrapper inline :path="mdiCounter" />
 					</template>
 				</TabLinkEntrySimple>
+
+				<div v-if="isLinkAvailable" style="margin-top: 30px;">
+					<strong>
+						<h3>{{ t('cidgravitygateway', 'IPFS Public Link') }}</h3>
+					</strong>
+
+					<!-- Display IPFS public link -->
+					<TabLinkEntrySimple ref="ipfsPublicLinkEntry"
+						class="menu-entry__internal"
+						:title="t('cidgravitygateway', 'IPFS public link')"
+						:subtitle="t('cidgravitygateway', 'Click to open')"
+						:link="ipfsPublicLink"
+						:has-copy-btn="true">
+						<template #avatar>
+							<NcIconSvgWrapper inline :path="mdiLink" />
+						</template>
+
+						<NcActionButton :close-after-click="true" @click="copyIpfsPublicLink">
+							<template #icon>
+								<CopyIcon :size="20" />
+							</template>
+							{{ t('cidgravitygateway', 'Copy public link') }}
+						</NcActionButton>
+
+						<NcActionButton :close-after-click="true" @click="useGatewayFromStorageConfig">
+							<template #icon>
+								<Tune :size="20" />
+							</template>
+							{{ t('cidgravitygateway', 'Use default storage gateway') }}
+						</NcActionButton>
+
+						<NcActionSeparator />
+
+						<NcActionButton :close-after-click="true" @click="useGatewayPinata">
+							{{ t('cidgravitygateway', 'Use pinata.cloud gateway') }}
+						</NcActionButton>
+
+						<NcActionButton :close-after-click="true" @click="useGatewayIpfsIo">
+							{{ t('cidgravitygateway', 'Use ipfs.io gateway') }}
+						</NcActionButton>
+
+						<NcActionButton :close-after-click="true" @click="useGatewayDweb">
+							{{ t('cidgravitygateway', 'Use dweb.link gateway') }}
+						</NcActionButton>
+					</TabLinkEntrySimple>
+				</div>
 			</ul>
 		</div>
 	</div>
 </template>
 
 <script>
-import NcSelect from '@nextcloud/vue/dist/Components/NcSelect.js'
 import TabLinkEntrySimple from '../components/TabLinkEntrySimple.vue'
 import NcActionButton from '@nextcloud/vue/dist/Components/NcActionButton.js'
 import NcEmptyContent from '@nextcloud/vue/dist/Components/NcEmptyContent.js'
 import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js'
 import AlertCircleOutlineIcon from 'vue-material-design-icons/AlertCircleOutline.vue'
+
+import CopyIcon from 'vue-material-design-icons/ContentCopy.vue'
+
+import Tune from 'vue-material-design-icons/Tune.vue'
+import NcActionSeparator from '@nextcloud/vue/dist/Components/NcActionSeparator.js'
 
 import axios from 'axios'
 
@@ -122,18 +137,11 @@ import { mdiLink, mdiListStatus, mdiCounter, mdiContentCopy, mdiIdentifier } fro
 export default {
 	name: 'GatewayTab',
 
-	setup() {
-		return {
-			mdiLink,
-			mdiListStatus,
-			mdiCounter,
-			mdiContentCopy,
-			mdiIdentifier
-		}
-	},
-
 	components: {
-		NcSelect,
+		Tune,
+		CopyIcon,
+		NcActionSeparator,
+
 		TabLinkEntrySimple,
 		NcActionButton,
 		NcEmptyContent,
@@ -152,14 +160,20 @@ export default {
 		},
 	},
 
+	setup() {
+		return {
+			mdiLink,
+			mdiListStatus,
+			mdiCounter,
+			mdiContentCopy,
+			mdiIdentifier,
+		}
+	},
+
 	data() {
 		return {
 			loading: true,
-			ipfsGatewayOptions: [
-				{ id: 'gateway.pinata.cloud', label: 'gateway.pinata.cloud', link: 'https://gateway.pinata.cloud/ipfs' },
-				{ id: 'ipfs.io', label: 'ipfs.io', link: 'https://ipfs.io/ipfs' },
-				{ id: 'dweb.link', label: 'dweb.link', link: 'https://dweb.link/ipfs' },
-			],
+			sharingPermission: 'ALL',
 			selectedOption: null,
 			fileInfo: {},
 			fileMetadata: {},
@@ -182,7 +196,7 @@ export default {
 			return this.$parent.activeTab
 		},
 		emptyContentTitle() {
-			return this.t('cidgravitygateway', 'Not metadata available')
+			return this.t('cidgravitygateway', 'No metadata available')
 		},
 		errorMessage() {
 			return this.isErrorMessageLocal
@@ -234,11 +248,11 @@ export default {
 			case 'staging':
 				return this.t('cidgravitygateway', 'At least one group is not yet fully ready')
 			case 'offloading':
-				return this.t('cidgravitygateway', 'All groups are ready, and the file is being offloaded to Filecoin')
+				return this.t('cidgravitygateway', 'File is being offloaded to Filecoin')
 			case 'partially_offloaded':
 				return this.t('cidgravitygateway', 'All groups have at least one active deal')
 			case 'offloaded':
-				return this.t('cidgravitygateway', 'All groups are offloaded, and the file is fully stored')
+				return this.t('cidgravitygateway', 'File is fully stored')
 			default:
 				return ''
 			}
@@ -251,10 +265,10 @@ export default {
 			return this.fileMetadata.details.retrievableCopies + ' ' + t('cidgravitygateway', 'retrievable copy')
 		},
 		ipfsPublicLink() {
-			return this.ipfsGateway.link + '/' + this.fileMetadata.cid
+			return this.ipfsGateway + '/' + this.fileMetadata.cid
 		},
-		isCustomIpfsGateway() {
-			return this.ipfsGateway.isCustom
+		isLinkAvailable() {
+			return this.fileMetadata.details.state === 'partially_offloaded' || this.fileMetadata.details.state === 'offloaded'
 		},
 	},
 
@@ -267,11 +281,24 @@ export default {
 	},
 
 	methods: {
+		useGatewayFromStorageConfig() {
+			this.ipfsGateway = this.externalStorageConfiguration.default_ipfs_gateway
+			showSuccess(t('cidgravitygateway', 'IPFS gateway updated'))
+		},
+		useGatewayPinata() {
+			this.ipfsGateway = 'https://gateway.pinata.cloud/ipfs'
+			showSuccess(t('cidgravitygateway', 'IPFS gateway updated'))
+		},
+		useGatewayIpfsIo() {
+			this.ipfsGateway = 'https://ipfs.io/ipfs'
+			showSuccess(t('cidgravitygateway', 'IPFS gateway updated'))
+		},
+		useGatewayDweb() {
+			this.ipfsGateway = 'https://dweb.link/ipfs'
+			showSuccess(t('cidgravitygateway', 'IPFS gateway updated'))
+		},
 		setLoading(loading) {
 			this.loading = loading
-		},
-		onIpfsGatewaySelected(option) {
-			this.ipfsGateway = option
 		},
 		async copyCid() {
 			try {
@@ -284,7 +311,7 @@ export default {
 		},
 		async copyIpfsPublicLink() {
 			try {
-				const publicLink = this.ipfsGateway.link + '/' + this.fileMetadata.cid
+				const publicLink = this.ipfsGateway + '/' + this.fileMetadata.cid
 				await navigator.clipboard.writeText(publicLink)
 				showSuccess(t('cidgravitygateway', 'Public link copied link copied'))
 			} catch (error) {
@@ -305,23 +332,7 @@ export default {
 		setExternalStorageConfiguration(config) {
 			this.externalStorageConfiguration = config
 			this.isCidgravityStorageLocal = true
-
-			// only list of gateway, not custom value here
-			const parsedUrl = new URL(this.externalStorageConfiguration.default_ipfs_gateway)
-
-			if (this.ipfsGatewayOptions.some(e => e.link === this.externalStorageConfiguration.default_ipfs_gateway)) {
-				this.ipfsGateway = {
-					id: parsedUrl.hostname,
-					label: parsedUrl.hostname,
-					link: this.externalStorageConfiguration.default_ipfs_gateway,
-				}
-			} else {
-				this.ipfsGateway = {
-					id: 'custom',
-					label: t('cidgravitygateway', 'Custom gateway'),
-					link: this.externalStorageConfiguration.default_ipfs_gateway,
-				}
-			}
+			this.ipfsGateway = this.externalStorageConfiguration.default_ipfs_gateway
 		},
 		loadFileMetadata() {
 			axios.get(generateOcsUrl('apps/cidgravitygateway/get-file-metadata?fileId=' + this.fileInfo.id, 2)).then(res => {
