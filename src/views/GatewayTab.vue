@@ -59,7 +59,7 @@
 				<TabLinkEntrySimple ref="cidEntry"
 					class="menu-entry__internal"
 					:title="fileRetrievableCopiesTitle"
-					:subtitle="t('cidgravitygateway', 'Minimum number of retrievable copies')">
+					:subtitle="t('cidgravitygateway', 'Number of copies that can be retrieved from Filecoin.')">
 					<template #avatar>
 						<NcIconSvgWrapper inline :path="mdiCounter" />
 					</template>
@@ -246,13 +246,13 @@ export default {
 		fileStatusDescription() {
 			switch (this.fileMetadata.details.state) {
 			case 'staging':
-				return this.t('cidgravitygateway', 'At least one group is not yet fully ready')
+				return this.t('cidgravitygateway', 'Preparing to push to Filecoin.')
 			case 'offloading':
-				return this.t('cidgravitygateway', 'File is being offloaded to Filecoin')
+				return this.t('cidgravitygateway', 'Actively transferring to Filecoin.')
 			case 'partially_offloaded':
-				return this.t('cidgravitygateway', 'All groups have at least one active deal')
+				return this.t('cidgravitygateway', 'At least one copy is stored and accessible on Filecoin.')
 			case 'offloaded':
-				return this.t('cidgravitygateway', 'File is fully stored')
+				return this.t('cidgravitygateway', 'All expected copies are stored and distributed on Filecoin.')
 			default:
 				return ''
 			}
