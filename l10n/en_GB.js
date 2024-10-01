@@ -28,6 +28,7 @@ OC.L10N.register(
         "Use pinata.cloud gateway": "Use pinata.cloud gateway",
         "Use ipfs.io gateway": "Use ipfs.io gateway",
         "Use dweb.link gateway": "Use dweb.link gateway",
+        "IPFS gateway updated": "IPFS gateway updated",
         "Status": "Status",
         "Staging": "Staging",
         "Offloading": "Offloading",
