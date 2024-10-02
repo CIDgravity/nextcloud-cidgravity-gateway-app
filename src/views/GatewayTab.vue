@@ -93,27 +93,45 @@
 							<template #icon>
 								<CopyIcon :size="20" />
 							</template>
-							{{ t('cidgravitygateway', 'Copy public link') }}
 						</NcActionButton>
 
 						<NcActionButton :close-after-click="true" @click="useGatewayFromStorageConfig">
 							<template #icon>
-								<Tune :size="20" />
+								<div v-if="isDefaultGatewayUsed">
+									<Check :size="20" />
+								</div>
 							</template>
+
 							{{ t('cidgravitygateway', 'Use default storage gateway') }}
 						</NcActionButton>
 
-						<NcActionSeparator />
-
 						<NcActionButton :close-after-click="true" @click="useGatewayPinata">
+							<template #icon>
+								<div v-if="isPinataGatewayUsed">
+									<Check :size="20" />
+								</div>
+							</template>
+
 							{{ t('cidgravitygateway', 'Use pinata.cloud gateway') }}
 						</NcActionButton>
 
 						<NcActionButton :close-after-click="true" @click="useGatewayIpfsIo">
+							<template #icon>
+								<div v-if="isIpfsIoGatewayUsed">
+									<Check :size="20" />
+								</div>
+							</template>
+
 							{{ t('cidgravitygateway', 'Use ipfs.io gateway') }}
 						</NcActionButton>
 
 						<NcActionButton :close-after-click="true" @click="useGatewayDweb">
+							<template #icon>
+								<div v-if="isDwebGatewayUsed">
+									<Check :size="20" />
+								</div>
+							</template>
+
 							{{ t('cidgravitygateway', 'Use dweb.link gateway') }}
 						</NcActionButton>
 					</TabLinkEntrySimple>
@@ -132,8 +150,7 @@ import AlertCircleOutlineIcon from 'vue-material-design-icons/AlertCircleOutline
 
 import CopyIcon from 'vue-material-design-icons/ContentCopy.vue'
 
-import Tune from 'vue-material-design-icons/Tune.vue'
-import NcActionSeparator from '@nextcloud/vue/dist/Components/NcActionSeparator.js'
+import Check from 'vue-material-design-icons/Check.vue'
 
 import axios from 'axios'
 
@@ -146,9 +163,8 @@ export default {
 	name: 'GatewayTab',
 
 	components: {
-		Tune,
+		Check,
 		CopyIcon,
-		NcActionSeparator,
 
 		TabLinkEntrySimple,
 		NcActionButton,
@@ -277,6 +293,18 @@ export default {
 		},
 		isLinkAvailable() {
 			return this.fileMetadata.details.state === 'partially_offloaded' || this.fileMetadata.details.state === 'offloaded'
+		},
+		isDefaultGatewayUsed() {
+			return this.ipfsGateway === this.externalStorageConfiguration.default_ipfs_gateway
+		},
+		isPinataGatewayUsed() {
+			return this.ipfsGateway === 'https://gateway.pinata.cloud/ipfs'
+		},
+		isIpfsIoGatewayUsed() {
+			return this.ipfsGateway === 'https://ipfs.io/ipfs'
+		},
+		isDwebGatewayUsed() {
+			return this.ipfsGateway === 'https://dweb.link/ipfs'
 		},
 	},
 
