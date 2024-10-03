@@ -71,6 +71,19 @@
 					</template>
 				</TabLinkEntrySimple>
 
+				<!-- Display expiration date -->
+				<TabLinkEntrySimple v-if="isExpirationDateAvailable"
+					ref="cidEntry"
+					class="menu-entry__internal"
+					:title="fileExpirationDateTitle"
+					:subtitle="t('cidgravitygateway', 'Date when at least part of the file will become unavailable.')">
+					<template #avatar>
+						<div class="entry-icon-primary">
+							<NcIconSvgWrapper inline :path="mdiCalendarRange" />
+						</div>
+					</template>
+				</TabLinkEntrySimple>
+
 				<div v-if="isLinkAvailable" style="margin-top: 30px;">
 					<strong>
 						<h3>{{ t('cidgravitygateway', 'IPFS Public Link') }}</h3>
@@ -149,15 +162,15 @@ import NcIconSvgWrapper from '@nextcloud/vue/dist/Components/NcIconSvgWrapper.js
 import AlertCircleOutlineIcon from 'vue-material-design-icons/AlertCircleOutline.vue'
 
 import CopyIcon from 'vue-material-design-icons/ContentCopy.vue'
-
 import Check from 'vue-material-design-icons/Check.vue'
 
+import moment from 'moment'
 import axios from 'axios'
 
 import { generateOcsUrl } from '@nextcloud/router'
 import { showSuccess, showError } from '@nextcloud/dialogs'
 
-import { mdiLink, mdiCloudUpload, mdiFileDownloadOutline, mdiContentCopy, mdiPound } from '@mdi/js'
+import { mdiLink, mdiCloudUpload, mdiFileDownloadOutline, mdiContentCopy, mdiPound, mdiCalendarRange } from '@mdi/js'
 
 export default {
 	name: 'GatewayTab',
@@ -191,6 +204,7 @@ export default {
 			mdiFileDownloadOutline,
 			mdiContentCopy,
 			mdiPound,
+			mdiCalendarRange,
 		}
 	},
 
@@ -288,11 +302,18 @@ export default {
 
 			return this.fileMetadata.details.retrievableCopies + ' ' + t('cidgravitygateway', 'retrievable copy')
 		},
+		fileExpirationDateTitle() {
+			const timestamp = moment.unix(this.fileMetadata.details.expriationTimestamp)
+			return 'Expiration on ' + timestamp.format('DD/MM/YYYY')
+		},
 		ipfsPublicLink() {
 			return this.ipfsGateway + '/' + this.fileMetadata.cid
 		},
 		isLinkAvailable() {
 			return this.fileMetadata.details.state === 'partially_offloaded' || this.fileMetadata.details.state === 'offloaded'
+		},
+		isExpirationDateAvailable() {
+			return this.fileMetadata.details.retrievableCopies > 0
 		},
 		isDefaultGatewayUsed() {
 			return this.ipfsGateway === this.externalStorageConfiguration.default_ipfs_gateway
