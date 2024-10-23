@@ -11,7 +11,8 @@
 				</div>
 			</a>
 
-			<NcActions v-if="$slots['default']"
+			<NcActions :inline="1"
+				v-if="$slots['default']"
 				ref="actionsComponent"
 				class="sharing-entry__actions"
 				menu-align="right"
@@ -30,7 +31,9 @@
 					{{ subtitle }}
 				</p>
 			</div>
-			<NcActions v-if="$slots['default']"
+
+			<NcActions :inline="1"
+				v-if="$slots['default']"
 				ref="actionsComponent"
 				class="sharing-entry__actions"
 				menu-align="right"
