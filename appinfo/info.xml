@@ -17,6 +17,6 @@
     <website>https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app</website>
 	<repository type="git">https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app</repository>
 	<dependencies>
-		<nextcloud min-version="29" max-version="29" />
+		<nextcloud min-version="29" max-version="30" />
 	</dependencies>
 </info>
