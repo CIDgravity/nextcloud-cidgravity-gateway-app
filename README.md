@@ -16,7 +16,7 @@ Access a new tab for file details to view additional information about the file 
 
 ### Manual installation (from releases)
 * Download the latest version from the [release page](https://github.com/CIDgravity/nextcloud-cidgravity-gateway-app/releases/latest).
-* Extract the archive to your Nextcloud's app folder, e.g. `unzip cidgravitygateway-vx.x.x.zip -C /path/to/nextcloud/apps`
+* Extract the archive to your Nextcloud's app folder, e.g. `unzip cidgravity_gateway-vx.x.x.zip -C /path/to/nextcloud/apps`
 * Enable the app in the Apps section of your Nextcloud.
 
 ### Manual installation (from repository)

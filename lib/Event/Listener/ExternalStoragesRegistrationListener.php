@@ -23,10 +23,10 @@ declare(strict_types=1);
  *
 */
 
-namespace OCA\CidgravityGateway\Event\Listener;
+namespace OCA\Cidgravity_Gateway\Event\Listener;
 
 use OCA\Files_External\Service\BackendService;
-use OCA\CidgravityGateway\Service\ProviderService;
+use OCA\Cidgravity_Gateway\Service\ProviderService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 

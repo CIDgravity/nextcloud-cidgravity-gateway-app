@@ -21,7 +21,7 @@ declare(strict_types=1);
  *
  */
 
-namespace OCA\CidgravityGateway\Event\Listener;
+namespace OCA\Cidgravity_Gateway\Event\Listener;
 
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
