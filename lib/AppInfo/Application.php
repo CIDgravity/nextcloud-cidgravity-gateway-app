@@ -1,6 +1,6 @@
 <?php
 
-namespace OCA\CidgravityGateway\AppInfo;
+namespace OCA\Cidgravity_Gateway\AppInfo;
 
 use OCA\Files\Event\LoadAdditionalScriptsEvent;
 use OCP\AppFramework\App;
@@ -8,14 +8,14 @@ use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
-use OCA\CidgravityGateway\Event\Listener\LoadAdditionalScriptsListener;
-use OCA\CidgravityGateway\Event\Listener\ExternalStoragesRegistrationListener;
-use OCA\CidgravityGateway\Event\Listener\UserCreatedListener;
+use OCA\Cidgravity_Gateway\Event\Listener\LoadAdditionalScriptsListener;
+use OCA\Cidgravity_Gateway\Event\Listener\ExternalStoragesRegistrationListener;
+use OCA\Cidgravity_Gateway\Event\Listener\UserCreatedListener;
 
 use OCP\User\Events\UserCreatedEvent;
 
 class Application extends App implements IBootstrap {
-	public const APP_ID = 'cidgravitygateway';
+	public const APP_ID = 'cidgravity_gateway';
 
 	public function __construct(array $urlParams = array()) {
 		parent::__construct(self::APP_ID, $urlParams);

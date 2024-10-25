@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace OCA\CidgravityGateway\Event\Listener;
+namespace OCA\Cidgravity_Gateway\Event\Listener;
 
 use OCA\Files\Event\LoadAdditionalScriptsEvent;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use OCP\Util;
 
-use OCA\CidgravityGateway\AppInfo\Application;
+use OCA\Cidgravity_Gateway\AppInfo\Application;
 
 class LoadAdditionalScriptsListener implements IEventListener {
 	public function __construct() {}
@@ -19,6 +19,6 @@ class LoadAdditionalScriptsListener implements IEventListener {
 			return;
 		}
 
-		Util::addScript(Application::APP_ID, 'cidgravitygateway-main', 'files');
+		Util::addScript(Application::APP_ID, 'cidgravity_gateway-main', 'files');
 	}
 }

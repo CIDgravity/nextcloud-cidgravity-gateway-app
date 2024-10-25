@@ -25,15 +25,15 @@ jobs:
 
       - name: Prepare zip folder
         run: |
-          mkdir cidgravitygateway
-          rsync -av --progress . ./cidgravitygateway --exclude node_modules --exclude .git --exclude cidgravitygateway --exclude .github --exclude .vscode
-          zip -r cidgravitygateway-${{ github.ref_name }}.zip cidgravitygateway
+          mkdir cidgravity_gateway
+          rsync -av --progress . ./cidgravity_gateway --exclude node_modules --exclude .git --exclude cidgravity_gateway --exclude .github --exclude .vscode
+          zip -r cidgravity_gateway-${{ github.ref_name }}.zip cidgravity_gateway
 
       - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          files: cidgravitygateway-${{ github.ref_name }}.zip
+          files: cidgravity_gateway-${{ github.ref_name }}.zip
           tag_name: ${{ github.ref_name }}
           draft: false
           prerelease: false
