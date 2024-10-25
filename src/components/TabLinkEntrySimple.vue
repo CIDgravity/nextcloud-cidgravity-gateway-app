@@ -11,9 +11,9 @@
 				</div>
 			</a>
 
-			<NcActions :inline="1"
-				v-if="$slots['default']"
+			<NcActions v-if="$slots['default']"
 				ref="actionsComponent"
+				:inline="1"
 				class="sharing-entry__actions"
 				menu-align="right"
 				:aria-expanded="ariaExpandedValue">
@@ -32,9 +32,9 @@
 				</p>
 			</div>
 
-			<NcActions :inline="1"
-				v-if="$slots['default']"
+			<NcActions v-if="$slots['default']"
 				ref="actionsComponent"
+				:inline="1"
 				class="sharing-entry__actions"
 				menu-align="right"
 				:aria-expanded="ariaExpandedValue">
