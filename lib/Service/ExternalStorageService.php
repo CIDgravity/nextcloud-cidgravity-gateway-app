@@ -62,8 +62,8 @@ class ExternalStorageService {
 
             if (!isset($externalStorageConfiguration['error'])) {
                 $requestBody = [
-                    "user" => $nextcloudUser->getUID(),
-                    "filepath" => $externalStorageConfiguration['filepath'],
+                    "verbose" => true,
+                    "filePath" => $externalStorageConfiguration['filepath'],
                 ];
 
                 $response = $this->httpClient->post(
@@ -74,14 +74,18 @@ class ExternalStorageService {
                     $externalStorageConfiguration['password'],
                 );
 
-                return ['result' => $response];
+                if ($response['success']) {
+                    return ['success' => true, 'metadata' => $response['result']];
+                } else {
+                    return ['success' => false, 'error' => $response['error']];
+                }
 
             } else {
-                return $externalStorageConfiguration;
+                return ['success' => false, 'error' => 'unable to find external storage configuration'];
             }
 
         } catch (Exception $e) {
-            return ['message' => 'error getting metadata for file ' . $fileId, 'error' => $e->getMessage()];
+            return ['success' => false, 'error' => 'error getting metadata for file ' . $fileId];
         }
 	}
 

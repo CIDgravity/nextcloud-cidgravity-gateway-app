@@ -13,6 +13,7 @@
 
 			<NcActions v-if="$slots['default']"
 				ref="actionsComponent"
+				:inline="1"
 				class="sharing-entry__actions"
 				menu-align="right"
 				:aria-expanded="ariaExpandedValue">
@@ -30,8 +31,10 @@
 					{{ subtitle }}
 				</p>
 			</div>
+
 			<NcActions v-if="$slots['default']"
 				ref="actionsComponent"
+				:inline="1"
 				class="sharing-entry__actions"
 				menu-align="right"
 				:aria-expanded="ariaExpandedValue">
