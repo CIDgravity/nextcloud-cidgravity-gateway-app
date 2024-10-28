@@ -1,45 +1,21 @@
 app_name=cidgravity_gateway
 project_dir=$(CURDIR)/../$(app_name)
 build_dir=$(CURDIR)/build/artifacts
-sign_dir=$(build_dir)/sign
 appstore_dir=$(build_dir)/appstore
 source_dir=$(build_dir)/source
+sign_dir=$(build_dir)/sign
 package_name=$(app_name)
-cert_dir=$(HOME)/certs
-build_tools_directory=$(CURDIR)/build/tools
-composer=$(shell which composer 2> /dev/null)
+cert_dir=$(HOME)/.nextcloud/certificates
+version+=master
 
-all: dev-setup lint build-js-production test
+all: dev-setup build-js-production
 
-# Dev env management
-dev-setup: clean clean-dev composer npm-init krankerl-install
+dev-setup: clean-dev npm-init
 
+dependabot: dev-setup npm-update build-js-production
 
-# Installs and updates the composer dependencies. 
-# If composer is not installed a copy is fetched from the web
-composer:
-ifeq (, $(composer))
-	@echo "No composer command available, downloading a copy from the web"
-	mkdir -p $(build_tools_directory)
-	curl -sS https://getcomposer.org/installer | php
-	mv composer.phar $(build_tools_directory)
-	php $(build_tools_directory)/composer.phar install --prefer-dist
-	php $(build_tools_directory)/composer.phar update --prefer-dist
-else
-	composer install --prefer-dist
-	composer update --prefer-dist
-endif
+release: appstore create-tag
 
-npm-init:
-	npm ci
-
-npm-update:
-	npm update
-
-krankerl-install:
-	cargo install --git https://github.com/ChristophWurst/krankerl
-
-# Building
 build-js:
 	npm run dev
 
@@ -49,23 +25,76 @@ build-js-production:
 watch-js:
 	npm run watch
 
-# Linting
+test:
+	npm run test:unit
+
 lint:
 	npm run lint
 
 lint-fix:
 	npm run lint:fix
 
-# Style linting
-stylelint:
-	npm run stylelint
+npm-init:
+	npm ci
 
-stylelint-fix:
-	npm run stylelint:fix
+npm-update:
+	npm update
 
-# Cleaning
 clean:
 	rm -rf js/*
+	rm -rf $(build_dir)
 
-clean-dev:
+clean-dev: clean
 	rm -rf node_modules
+
+create-tag:
+	git tag -a v$(version) -m "Tagging the $(version) release."
+	git push origin v$(version)
+
+appstore:
+	rm -rf $(build_dir)
+	mkdir -p $(sign_dir)
+	rsync -a \
+	--exclude=babel.config.js \
+	--exclude=/build \
+	--exclude=composer.json \
+	--exclude=composer.lock \
+	--exclude=docs \
+	--exclude=.drone.yml \
+	--exclude=.eslintignore \
+	--exclude=.eslintrc.js \
+	--exclude=.git \
+	--exclude=.gitattributes \
+	--exclude=.github \
+	--exclude=.gitignore \
+	--exclude=jest.config.js \
+	--exclude=.l10nignore \
+	--exclude=mkdocs.yml \
+	--exclude=Makefile \
+	--exclude=node_modules \
+	--exclude=package.json \
+	--exclude=package-lock.json \
+	--exclude=.php_cs.dist \
+	--exclude=.php_cs.cache \
+	--exclude=README.md \
+	--exclude=src \
+	--exclude=.stylelintignore \
+	--exclude=stylelint.config.js \
+	--exclude=.tx \
+	--exclude=tests \
+	--exclude=vendor \
+	--exclude=webpack.*.js \
+	$(project_dir)/  $(sign_dir)/$(app_name)
+	@if [ -f $(cert_dir)/$(app_name).key ]; then \
+		echo "Signing app files…"; \
+		php ../../occ integrity:sign-app \
+			--privateKey=$(cert_dir)/$(app_name).key\
+			--certificate=$(cert_dir)/$(app_name).crt\
+			--path=$(sign_dir)/$(app_name); \
+	fi
+	tar -czf $(build_dir)/$(app_name).tar.gz \
+		-C $(sign_dir) $(app_name)
+	@if [ -f $(cert_dir)/$(app_name).key ]; then \
+		echo "Signing package…"; \
+		openssl dgst -sha512 -sign $(cert_dir)/$(app_name).key $(build_dir)/$(app_name).tar.gz | openssl base64; \
+	fi
