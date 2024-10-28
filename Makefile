@@ -1,5 +1,5 @@
 app_name=cidgravity_gateway
-project_dir=$(CURDIR)/../$(app_name)
+project_dir=$(CURDIR)
 build_dir=$(CURDIR)/build/artifacts
 appstore_dir=$(build_dir)/appstore
 source_dir=$(build_dir)/source
@@ -85,6 +85,10 @@ appstore:
 	--exclude=vendor \
 	--exclude=webpack.*.js \
 	$(project_dir)/  $(sign_dir)/$(app_name)
+
+	php ./bin/tools/file_from_env.php "APP_PRIVATE_KEY" "$(cert_dir)/$(app_name).key"
+	php ./bin/tools/file_from_env.php "APP_PUBLIC_CRT" "$(cert_dir)/$(app_name).crt"
+
 	@if [ -f $(cert_dir)/$(app_name).key ]; then \
 		echo "Signing app files…"; \
 		php ../../occ integrity:sign-app \

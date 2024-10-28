@@ -1,14 +1,19 @@
-name: Build and publish app release
+name: Publish to Nextcloud store
 
 on:
-  release:
-      types: [published]
+  workflow_run:
+    workflows: ["Build and Release"] 
+    types:
+      - completed 
 
 env:
-  APP_NAME: news
+  APP_NAME: cidgravity_gateway
+  APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+  APP_PUBLIC_CRT: ${{ secrets.APP_PUBLIC_CRT }}
 
 jobs:
-  build_and_publish:
+  publish_to_nextcloud_store:
+    environment: release
     runs-on: ubuntu-latest
     name: "Release: build, sign and upload the app"
     strategy:
