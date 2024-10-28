@@ -5,37 +5,78 @@ on:
     tags:
       - 'v*.*.*'
 
+env:
+  APP_NAME: cidgravity_gateway
+  APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+  APP_PUBLIC_CRT: ${{ secrets.APP_PUBLIC_CRT }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    name: "Release: build, sign, release and publish to store"
+    strategy:
+      matrix:
+        php-versions: ['8.1']
+        node-versions: ['20']
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ matrix.node-versions }}
 
-      - name: Install dependencies and build project
-        run: |
-          npm install
-          npm run build
+      - name: Setup PHP
+        uses: shivammathur/setup-php@2.31.1
+        with:
+          php-version: ${{ matrix.php-versions }}
+          extensions: gd,zip
+          coverage: none
 
-      - name: Prepare zip folder
+      - name: Build app
+        run: make
+
+      - name: Create signed release archive
+        run: make appstore
+        env:
+          app_private_key: ${{ secrets.APP_PRIVATE_KEY }}
+          app_public_crt: ${{ secrets.APP_PUBLIC_CRT }}
+
+      - name: Generate signature
+        id: sign_archive
         run: |
-          mkdir cidgravity_gateway
-          rsync -av --progress . ./cidgravity_gateway --exclude node_modules --exclude .git --exclude cidgravity_gateway --exclude .github --exclude .vscode
-          zip -r cidgravity_gateway-${{ github.ref_name }}.zip cidgravity_gateway
+          echo "${{ secrets.APP_PRIVATE_KEY }}" > private_key.pem
+          signature=$(openssl dgst -sha512 -sign private_key.pem "build/artifacts/${{ env.APP_NAME }}.tar.gz" | openssl base64 -A)
+          echo "SIGNATURE=$signature" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v2
         with:
-          files: cidgravity_gateway-${{ github.ref_name }}.zip
           tag_name: ${{ github.ref_name }}
           draft: false
           prerelease: false
           generate_release_notes: true
+      
+      - name: Upload signed archive to release
+        uses: svenstaro/upload-release-action@2.9.0
+        id: attach_to_release
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: build/artifacts/${{ env.APP_NAME }}.tar.gz
+          asset_name: ${{ env.APP_NAME }}.tar.gz
+          tag: ${{ github.ref_name }}
+          overwrite: true
 
+      - name: Publish to Nextcloud appstore
+        run: |
+            curl -X POST https://apps.nextcloud.com/api/v1/apps/releases \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Token ${{ secrets.APPSTORE_TOKEN }}" \
+              -d '{"download": "${{ steps.attach_to_release.outputs.browser_download_url }}", "signature": "${{ steps.sign_archive.outputs.SIGNATURE }}"}'
+  
+
+      - name: Clean certificates
+        run: rm -f ~/.nextcloud/certificates/*
