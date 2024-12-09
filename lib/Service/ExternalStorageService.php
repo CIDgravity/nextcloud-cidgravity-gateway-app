@@ -113,7 +113,7 @@ class ExternalStorageService {
                 return ['message' => 'external storage type for file ' . $fileId . ' is not a cidgravity storage', 'error' => 'external_storage_invalid_type'];
             }
 
-            return $this->buildExternalStorageConfiguration($mountsForFile[0]->getInternalPath(), $externalStorage, $includeAuthSettings);
+            return $this->buildLightExternalStorageConfiguration($externalStorage);
 
         } catch (Exception $e) {
             return ['message' => 'error getting external storage config', 'error' => $e->getMessage()];
@@ -156,6 +156,18 @@ class ExternalStorageService {
             $configuration['password'] = $externalStorage->getBackendOption('password');
         }
 
+        return $configuration;
+    }
+
+    /**
+	 * Construct light specific configuration object from external storage configuration
+	 * @param StorageConfig $externalStorage External storage to build configuration for
+	 * @return array
+	*/
+    private function buildLightExternalStorageConfiguration(StorageConfig $externalStorage): array {
+        $configuration = [];
+        $configuration['is_cidgravity'] = $externalStorage->getBackend()->getIdentifier() == "cidgravity";
+        $configuration['default_ipfs_gateway'] = $externalStorage->getBackendOption('default_ipfs_gateway');
         return $configuration;
     }
 }
