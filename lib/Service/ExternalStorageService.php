@@ -96,7 +96,7 @@ class ExternalStorageService {
 	 * @return array
 	 * @throws Exception
 	 */
-    public function getExternalStorageConfigurationForSpecificFile(IUser $nextcloudUser, int $fileId, bool $includeAuthSettings): array {
+    public function getExternalStorageConfigurationForSpecificFile(IUser $nextcloudUser, int $fileId, bool $includeSensitiveSettings): array {
         try {
             $mountsForFile = $this->userMountCache->getMountsForFileId($fileId, $nextcloudUser->getUID());
 
@@ -111,6 +111,10 @@ class ExternalStorageService {
             // if not, it means storage not found (for our use case)
             if ($externalStorage->getBackend()->getIdentifier() != "cidgravity") {
                 return ['message' => 'external storage type for file ' . $fileId . ' is not a cidgravity storage', 'error' => 'external_storage_invalid_type'];
+            }
+
+            if ($includeSensitiveSettings) {
+                return $this->buildExternalStorageConfiguration($mountsForFile[0]->getInternalPath(), $externalStorage, $includeSensitiveSettings);
             }
 
             return $this->buildLightExternalStorageConfiguration($externalStorage);
